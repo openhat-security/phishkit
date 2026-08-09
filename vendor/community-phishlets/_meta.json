@@ -1,0 +1,35 @@
+{
+  "collision_count": 96,
+  "generated_at": "2026-07-26T11:06:31.677292+00:00",
+  "merged_count": 122,
+  "sources": [
+    {
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "id": "anonud4y",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "yaml_count": 86
+    },
+    {
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "id": "cybersecurityteampk",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "yaml_count": 115
+    },
+    {
+      "commit": "d67d028ea489673eda93e88167502dc7f5c0b896",
+      "id": "klezvirus",
+      "priority": 3,
+      "repo": "klezVirus/evilginx-collection",
+      "yaml_count": 10
+    },
+    {
+      "commit": "7b8a593f34841aa4da53acd8beeecc9c9128d390",
+      "id": "simplerhacking",
+      "priority": 4,
+      "repo": "simplerhacking/Evilginx3-Phishlets",
+      "yaml_count": 7
+    }
+  ]
+}

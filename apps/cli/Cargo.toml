@@ -1,0 +1,23 @@
+[package]
+name = "phishkit-cli"
+version = "0.1.0"
+description = "phishkit headless CLI"
+edition = "2021"
+license = "GPL-3.0-only"
+publish = false
+
+[[bin]]
+name = "phishkit"
+path = "src/phishkit.rs"
+
+[[bin]]
+name = "phishkit_ctl"
+path = "src/phishkit_ctl.rs"
+
+[dependencies]
+phishkit-core = { path = "../../crates/phishkit-core" }
+serde_json = "1"
+
+[dev-dependencies]
+phishkit-core = { path = "../../crates/phishkit-core" }
+serde_json = "1"

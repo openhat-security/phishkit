@@ -1,0 +1,15 @@
+# Maintainer: REPLACE_ME <REPLACE_ME@example.com>
+pkgname=phishkit-bin
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Authorized AiTM + awareness assessment CLI (prebuilt)"
+arch=('x86_64')
+url="https://github.com/irruptio-security/phishkit"
+license=('GPL3')
+depends=()
+source=("$url/releases/download/v$pkgver/phishkit-x86_64-unknown-linux-gnu.tar.gz")
+sha256sums=('REPLACE_ME')
+
+package() {
+  install -Dm755 phishkit "$pkgdir/usr/bin/phishkit"
+}

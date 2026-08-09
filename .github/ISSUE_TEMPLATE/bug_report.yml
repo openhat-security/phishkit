@@ -1,0 +1,63 @@
+name: Bug report
+description: Report a non-security bug in the phishkit desktop app
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do **not** report security vulnerabilities here. Use a private
+        [GitHub Security Advisory](https://github.com/irruptio-security/phishkit/security/advisories/new)
+        instead (see SECURITY.md). Never paste captured credentials, session
+        cookies, tokens, recipient lists, or unredacted logs.
+
+  - type: input
+    id: version
+    attributes:
+      label: phishkit version
+      placeholder: e.g. 0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - macOS
+        - Linux
+        - Windows
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Assessments / Targets
+        - Phishlet / Proxy (evilginx)
+        - Templates / Recipients
+        - Campaigns / delivery engine
+        - Results / Sessions
+        - CLI (phishkit_ctl)
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: What did you do?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs. actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Redacted logs / context
+      description: Remove recipient emails, credentials, tokens, cookies, domains, and file paths before pasting.
+    validations:
+      required: false

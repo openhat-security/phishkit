@@ -1,0 +1,39 @@
+{
+  "templates": [
+    {
+      "id": "generic-spa",
+      "name": "Generic SPA",
+      "stack": "generic_spa",
+      "description": "App + API hosts, optional cookies and body tokens",
+      "yaml": "generic-spa.yaml"
+    },
+    {
+      "id": "jwt-api",
+      "name": "JWT / API body",
+      "stack": "jwt_body",
+      "description": "Cookie-optional + JSON body token capture",
+      "yaml": "jwt-api.yaml"
+    },
+    {
+      "id": "cookie-sso",
+      "name": "Cookie SSO",
+      "stack": "cookie_session",
+      "description": "Classic session-cookie capture",
+      "yaml": "cookie-sso.yaml"
+    },
+    {
+      "id": "oauth-oidc",
+      "name": "OAuth / OIDC",
+      "stack": "oauth",
+      "description": "Auth0/Okta/Cognito-style host + cookie patterns",
+      "yaml": "oauth-oidc.yaml"
+    },
+    {
+      "id": "firebase",
+      "name": "Firebase Auth",
+      "stack": "firebase",
+      "description": "Identity Toolkit hooks + id/refresh tokens",
+      "yaml": "firebase.yaml"
+    }
+  ]
+}

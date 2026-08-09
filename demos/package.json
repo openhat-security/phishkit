@@ -1,0 +1,16 @@
+{
+  "name": "phishkit-demos",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "demo:cookie": "tsx cookie/server.ts",
+    "demo:firebase": "tsx firebase/server.ts",
+    "demo:tunnel": "untun tunnel"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "untun": "^0.1.3"
+  }
+}

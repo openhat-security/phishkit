@@ -1,0 +1,46 @@
+name: Feature request
+description: Suggest an improvement to the phishkit desktop app
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        phishkit is for **authorized** security assessments. Requests whose
+        primary purpose is to enable unauthorized use, evade lawful detection,
+        or remove the authorized-use gate are out of scope.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do that phishkit makes hard today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: dropdown
+    id: audience
+    attributes:
+      label: Primary audience
+      options:
+        - Technical operator (more control / configurability)
+        - Non-technical business user (guided / out-of-the-box)
+        - Both
+    validations:
+      required: false
+  - type: textarea
+    id: privacy
+    attributes:
+      label: Privacy / security considerations
+      description: How should this behave under failure, and what must never leak?
+    validations:
+      required: false
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false

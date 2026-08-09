@@ -1,0 +1,29 @@
+[package]
+name = "phishkit"
+version = "0.1.0"
+description = "phishkit desktop — Tauri shell over phishkit-core"
+authors = ["phishkit"]
+edition = "2021"
+default-run = "phishkit"
+
+[lib]
+name = "phishkit_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+phishkit-core = { path = "../../../crates/phishkit-core" }
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-wdio = "1"
+tauri-plugin-wdio-webdriver = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+e2e = []

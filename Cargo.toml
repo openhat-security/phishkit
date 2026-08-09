@@ -1,0 +1,7 @@
+[workspace]
+resolver = "2"
+members = [
+  "crates/phishkit-core",
+  "apps/desktop/src-tauri",
+  "apps/cli",
+]

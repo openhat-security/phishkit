@@ -1,0 +1,8 @@
+[workspace]
+members = ["cargo:."]
+
+# cargo-dist configuration placeholder — run `cargo dist init` after filling
+# GitHub org / Homebrew tap names. Produces CLI Release artifacts (.deb, archives).
+[dist]
+# github-releases = true
+# tap = "REPLACE_ME/homebrew-phishkit"

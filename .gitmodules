@@ -1,0 +1,3 @@
+[submodule "vendor/evilginx2"]
+	path = vendor/evilginx2
+	url = https://github.com/kgretzky/evilginx2.git

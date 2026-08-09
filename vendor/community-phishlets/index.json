@@ -1,0 +1,1228 @@
+{
+  "collision_count": 96,
+  "count": 122,
+  "generated_at": "2026-07-26T11:06:31.675775+00:00",
+  "lock_file": "evilginx/community-phishlets.lock.json",
+  "phishlets": [
+    {
+      "bytes": 7922,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "163working.yaml",
+      "path": "anonud4y/163working.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "17391e7984f7792f313552909aaab8d6efd8603388faedbae2ced9ec3cf207dc",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 18519,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "airbnb.yaml",
+      "path": "anonud4y/airbnb.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "bb7a383cca4fb69ce2afea2c2bc01faa0e03aca5c7c0e0386933c5e86c1204ef",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 1391,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "airbnbfr.yaml",
+      "path": "anonud4y/airbnbfr.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "c02b54024e0d208b73a35a28e943b582ce51d4e291a4d287a1d30af871632a1f",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 8434,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "alibaba.yaml",
+      "path": "anonud4y/alibaba.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "bef1d732cfacd5fb471531575d4ac14bd28770ed8c01fc3623c4fb1634b78e1d",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 2559,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "allegro.yaml",
+      "path": "anonud4y/allegro.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "861dad535b7c546ec8cdd9d4021e09d73a7ff8e1082631a2049dc7219c249382",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 3123,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "Amazon--.yaml",
+      "path": "anonud4y/Amazon--.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "255ce4a0875b1130c9e152d0fc47c81023ef89d48750191f8567a7e9db74145a",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 5699,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "amazon-seller.yaml",
+      "path": "anonud4y/amazon-seller.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "288cf4fe9362d1ee44aa11c31d36f6f96af9cb9d9c945d189087c35ddfe274ac",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 2295,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "amazon.yaml",
+      "path": "anonud4y/amazon.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "33d087693fafa83f8da29df46323197545b3399dad1a984b090037529d5fa1dc",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 14460,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "americanexpress.yaml",
+      "path": "cybersecurityteampk/americanexpress.yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "d0659e8489bc633b617e86f4e7994a593ada5cfc8463f79631d9672623b79750",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 8139,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "aol.yaml",
+      "path": "anonud4y/aol.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "3df7f1bb2cdbee89f02ad981d044bf31cb3e37a2702b3611530c82107f85c12f",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 6071,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "autoline.yaml",
+      "path": "anonud4y/autoline.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "24bf837d1d80073d4b7334037a8286ed298027c72f3a3abb94062b05c37d8d02",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 7216,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "aws.yaml",
+      "path": "anonud4y/aws.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "4f6749a077be50ae56800a0dbed789b863c625d29b5e86827596426007f77b4f",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 2634,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "banistmo.yaml",
+      "path": "cybersecurityteampk/banistmo.yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "c71b7d5956902e14f3d394aec1e1fd15bc6a7ce016b52d19ca95607b4144192f",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 7380,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "barclays.yaml",
+      "path": "cybersecurityteampk/barclays.yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "65696f93bce6d78c8e377fc3c4c56123f49f26a621a332bc764c274aa7c81632",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 13050,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "binance.yaml",
+      "path": "cybersecurityteampk/binance.yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "b898e52e3799d4c3c4fa328c400ba620c814c11ca23d0b7ec2f3fd7917a7e8a1",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 23369,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "binance2-(redirect-Captcha).yaml",
+      "path": "cybersecurityteampk/binance2-(redirect-Captcha).yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "1de0d1e7805edcd36247e2c224aa8c691c774ba8497f88f2e2dea157c30906a9",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 4040,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "binanceus.yaml",
+      "path": "cybersecurityteampk/binanceus.yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "5ae17ceeb8dcfb5eb56fc27876c5047ddfebcb9114beb0a03db81000c46d7054",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 1107,
+      "commit": "7b8a593f34841aa4da53acd8beeecc9c9128d390",
+      "name": "BlankTemplate.yaml",
+      "path": "simplerhacking/BlankTemplate.yaml",
+      "priority": 4,
+      "repo": "simplerhacking/Evilginx3-Phishlets",
+      "sha256": "88735874afcc3faf1f22d3c6fe802acd3f088cdcdb5144fa33798ecc3dc5a127",
+      "source": "simplerhacking"
+    },
+    {
+      "bytes": 5939,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "blockchain(Basic).yaml",
+      "path": "cybersecurityteampk/blockchain(Basic).yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "55049f7690abbbb5c8dc844e54b63269d111c0cd21e98854c666a27788dc5de6",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 8936,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "blockchain(Fixed).yaml",
+      "path": "cybersecurityteampk/blockchain(Fixed).yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "298047e6ce299b73ea411a8ed2d67484db6c8c276a299403e0b9766cc9079456",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 8378,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "blockchain(Fixed2).yaml",
+      "path": "cybersecurityteampk/blockchain(Fixed2).yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "91b1c7537e69ff7ade05c1c3a6051c2981a022a11b71c6e355891e294574a066",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 10194,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "blockchain.yaml",
+      "path": "cybersecurityteampk/blockchain.yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "ffa5514b45c48061e412487d4defdeffa87a338213aa1bc4aabb3259ce18d7aa",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 34447,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "bmo.yaml",
+      "path": "cybersecurityteampk/bmo.yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "88113ededbda181be6c6f9bd4ba8145666b48bf9e9b8dc170e66e884b10fdc91",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 2067,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "bmomobile.yaml",
+      "path": "cybersecurityteampk/bmomobile.yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "1dd63a324303ac18c64c435bf6acfff6efa419b20c305dddb9905cde41feeb4c",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 7805,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "booking.yaml",
+      "path": "anonud4y/booking.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "d71f891439b128f8aa98260778e8fcbbeb9a7c79845f571318ea8c90b2463257",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 15305,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "capital.yaml",
+      "path": "cybersecurityteampk/capital.yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "823c3d2bbca46e7aedadfef6893babcbf14b0182e598a9ba958b84892daaeeb1",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 10310,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "chase.yaml",
+      "path": "cybersecurityteampk/chase.yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "7612416d8bde145810923ed8f75d2c1fb81cdecc1aa7a997ae68cffb5dc99f43",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 12485,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "chrome_extension.yaml",
+      "path": "anonud4y/chrome_extension.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "284f7703b156e07079c6da4e2aed62db97e879958a14f60605ed2d21cad5b9ea",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 740,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "citrix.yaml",
+      "path": "anonud4y/citrix.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "8cda5aeacd3a40ecc87f52fb925da11236ad7d0d9afe506990296af45a0060e9",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 16446,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "coinbase.yaml",
+      "path": "cybersecurityteampk/coinbase.yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "2d3ce0b49997314a863aa4a9ef25fe06021aac1107aaf63af18ba9730f13e7e3",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 4263,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "coinspot.yaml",
+      "path": "anonud4y/coinspot.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "719ee2723f118c29c42eab5338c5f863a5ac21408040ee6bbeb032353addb099",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 27193,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "coolblue.yaml",
+      "path": "anonud4y/coolblue.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "d4134d028e28171527d1cdf440945d200f1e59a9359bad1ef4f605bd5770131e",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 31875,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "dropbox.yaml",
+      "path": "anonud4y/dropbox.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "fa21dfe8e805761ba53eed0e65ae4b2368d36a10975f5a3496b1c603423b051a",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 10026,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "ebay.yaml",
+      "path": "anonud4y/ebay.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "0b57ba34499c55dd28801fce04afa5be455d627686b50228d4116f8c441471c9",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 12455,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "edd.yaml",
+      "path": "anonud4y/edd.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "16ede709e214c10aee7e8cf04f53ad6a8b601280c848139ae21a4e687dc6e2e0",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 743,
+      "commit": "7b8a593f34841aa4da53acd8beeecc9c9128d390",
+      "name": "evilpuppet.yaml",
+      "path": "simplerhacking/evilpuppet.yaml",
+      "priority": 4,
+      "repo": "simplerhacking/Evilginx3-Phishlets",
+      "sha256": "1e231ab3ed146012d845e3f7bf8012a6d68724502255daa4adca1fa9b551fd6c",
+      "source": "simplerhacking"
+    },
+    {
+      "bytes": 4530,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "facebook-d.yaml",
+      "path": "anonud4y/facebook-d.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "cbef4d622062284e3efa2e943a6f7377d3b86c64b0fd4dc4e71841c9a37b0873",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 4253,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "facebook-d2.yaml",
+      "path": "anonud4y/facebook-d2.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "772ed76e2326ea6db781b46d240383aca5ae85bd5ddbef15f267d0d4ef049891",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 3681,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "facebook-d3.yaml",
+      "path": "anonud4y/facebook-d3.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "f02dc290966ee5c30428cad7619a940f9030f85da8d9c4c0816da44dde6c326f",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 4353,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "facebook-fix.yaml",
+      "path": "anonud4y/facebook-fix.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "3aaf366311facf85eac5811c6b257c085fdb460d16f8659063fe3cdc94c90a7f",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 6451,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "facebook.yaml",
+      "path": "anonud4y/facebook.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "5430684a57c11630f805b88259a0973d7751c04e866ad57ac82f988356680f9b",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 15848,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "fidelity.yaml",
+      "path": "anonud4y/fidelity.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "808f8ad472a88df4eb950216cdc318647f12da6ae6a1c5125993f5e270abb055",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 3840,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "fudan.yaml",
+      "path": "anonud4y/fudan.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "6c99e46d2a06df5605391dc2b331b79acd7ed6f93ce3b6defee9d3bf5b1e5a13",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 763,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "github.yaml",
+      "path": "anonud4y/github.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "02b4bf219cf907e8587a8912767523ed358f2f544eea97604cd7d55dbdbbdf01",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 10670,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "godaddy(sso).yaml",
+      "path": "anonud4y/godaddy(sso).yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "785a7e78697243cb7f23343b83297fe761aaf23880dda4e0c477dd31eaa3a62a",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 3293,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "godaddy.yaml",
+      "path": "anonud4y/godaddy.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "81bdc4afeeb5c58c7ec8416d3f267ab806c198970aa95a900426d7b57880d4c6",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 21767,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "google-botguard-bypass.yaml",
+      "path": "anonud4y/google-botguard-bypass.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "2da3e16627e99f022bd488e5b0069d83c145b0e3fd56230112124135680808be",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 10926,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "google.yaml",
+      "path": "anonud4y/google.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "0fd4034038efedfb6b399d71ca2aaf66eebdea72b8c475ff42a1c149440b0c29",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 21097,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "google2.yaml",
+      "path": "anonud4y/google2.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "0ca82cf03ed52928e3f27091612d412bb6048b41571a89ee581716427b0be74b",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 4738,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "gsuite.yaml",
+      "path": "anonud4y/gsuite.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "8a003a541097bc168a9093649f59c21631cbbcee7fee4bc783227234e03e3228",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 28918,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "gusto.yaml",
+      "path": "anonud4y/gusto.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "f2dac02c25c0aba87e6b08cad59fc5c9fa01f22d24306a35fe8cd77b04f4fc8d",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 1217,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "hcaptcha-demo.yaml",
+      "path": "anonud4y/hcaptcha-demo.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "00100eabea2e7ede2026622e5a539922948a3916251b64d7e2dde43aba4e327c",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 17472,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "hetzner.yaml",
+      "path": "anonud4y/hetzner.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "cd0d13d84ca341aee7c84da8e3eb62a3a34e3cf1a64818f34b72c9a55dbef412",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 46725,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "hinet.yaml",
+      "path": "anonud4y/hinet.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "5d99c6fe134cb6c0116cdda94690100bb8e47a4972097872eeccdaef2cda9059",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 12486,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "hotmail.yaml",
+      "path": "anonud4y/hotmail.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "b8b5c301f30b58e2b764204ea27f892b0a62be700e9213076977782c15ec9998",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 7902,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "huntington.yaml",
+      "path": "cybersecurityteampk/huntington.yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "0bc38984ce64aa213a77c2c9125a68a057f76f354a44060f8342d5375368ef04",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 17413,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "icloud.yaml",
+      "path": "anonud4y/icloud.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "df15ec58946afaba3b61720b85b7ed93c0d8f0a687503bb0dba89ecf459b12d0",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 12086,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "icloud2.yaml",
+      "path": "anonud4y/icloud2.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "24380cb0400ed7f4980a960144740e3e6664028728f7db8edf1eeca8c584ba99",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 1860,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "instagram.yaml",
+      "path": "anonud4y/instagram.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "4d669f4c6a973a9218cd73aa9e1b425f08b83ab1c3863c3267fe125bfd9fb940",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 4471,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "intuit.yaml",
+      "path": "anonud4y/intuit.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "a8d455eb01e50dc081304af425a661e2aae54dee7e57b10e099f8e6aa053b9b9",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 1140,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "ionos.yaml",
+      "path": "anonud4y/ionos.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "78e06c056ca75e7253f6c409248d19bdd7cdf1741ca6c2594a59d2d7a9f9b5e2",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 13603,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "linkedin.yaml",
+      "path": "anonud4y/linkedin.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "6964753c679b41eaffb10b59ff3c9770c100e12c3355b5ea27bf7f607b397610",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 4580,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "linkedin2.yaml",
+      "path": "anonud4y/linkedin2.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "d4dc35e213519ac015044e09d31c6839ee8338439be2538208db23d229a304c4",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 10542,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "luno.yaml",
+      "path": "anonud4y/luno.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "c5d65176369f8b251d6e3e81fb276d4eba89cc149ce064b5786072adbeec7439",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 2625,
+      "commit": "7b8a593f34841aa4da53acd8beeecc9c9128d390",
+      "name": "microsoft-o365-adfs.yaml",
+      "path": "simplerhacking/microsoft-o365-adfs.yaml",
+      "priority": 4,
+      "repo": "simplerhacking/Evilginx3-Phishlets",
+      "sha256": "874528687e9e6fef2de8ef107d428160dcf41c0546ce0c999aa91da59f38fee9",
+      "source": "simplerhacking"
+    },
+    {
+      "bytes": 11623,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "microsoft.yaml",
+      "path": "anonud4y/microsoft.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "8f42dfb2bc6a2e9d925e30d24bf1ec99e17b2e303d8ec046ae60a21b3f8e91fb",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 2538,
+      "commit": "7b8a593f34841aa4da53acd8beeecc9c9128d390",
+      "name": "Microsoft2024.yaml",
+      "path": "simplerhacking/Microsoft2024.yaml",
+      "priority": 4,
+      "repo": "simplerhacking/Evilginx3-Phishlets",
+      "sha256": "cf67bbf909456157daea22afe957432fd4279e1831178b3210466f9e8ec625bc",
+      "source": "simplerhacking"
+    },
+    {
+      "bytes": 10089,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "mobile-de.yaml",
+      "path": "anonud4y/mobile-de.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "b658f83b8f0711b9a499cc09efd4ffe96b6523ede44ad2d58a47a92dc320ec17",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 1730,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "namecheap.yaml",
+      "path": "anonud4y/namecheap.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "509e43cedf575049cd4e8b8fe71ad98a274250029fb0ff6c98997fb464e30116",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 10350,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "notthingham.yaml",
+      "path": "cybersecurityteampk/notthingham.yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "5d494fc79356aeb1e983aab7188e729550c1f54ffcdcb02270acc492f2164afa",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 5649,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "nottingham.yaml",
+      "path": "cybersecurityteampk/nottingham.yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "d5591f81fb5bd90d3af0954008ecfd433eeaf6ecc99941324747ca7433ae5985",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 3265,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "o365(2).yaml",
+      "path": "anonud4y/o365(2).yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "7dea9844a2854bdfa9f755e1044eae97fce68f01ba87a9c58f8f1c36b20a03d6",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 1777,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "o365(April-latest).yaml",
+      "path": "anonud4y/o365(April-latest).yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "9c9ddd40d3db0b8fb77ab149b5e43ea3bed654e326ed8210645087490ccf0fa4",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 14245,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "o365(outlook).yaml",
+      "path": "anonud4y/o365(outlook).yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "903e86cb03d2870f2068d78cd41fb8bb8a29de9f940d34f52799a1814e895cea",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 5770,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "o365(working-october21).yaml",
+      "path": "anonud4y/o365(working-october21).yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "e3e8e152ac9113a945b5889d8730358e69c8cc78cece0f718123910fe2e1e357",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 2789,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "o365(working2).yaml",
+      "path": "anonud4y/o365(working2).yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "bdb8f41eaa37fc79b8f0579bfa3805cbb731782b2257f6ffef0c1121d81d9449",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 4370,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "o365(working2a).yaml",
+      "path": "anonud4y/o365(working2a).yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "a116ccb000a7bc9cb1f30355f21fda7e0cb50c996b810510cd46d5a383fe3545",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 8073,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "o365.yaml",
+      "path": "anonud4y/o365.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "aa1768e53627305f7c0739b487fbcabe77752375621f8ffcacc6460148a7ca89",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 782,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "okta.yaml",
+      "path": "anonud4y/okta.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "c1e07c1954f7c015d549a82fe056da145aa1bf10563b85b90b2798858506abf8",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 1843,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "onelogin.yaml",
+      "path": "anonud4y/onelogin.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "3fd61190d09c7896bfbeeea289830c7fea7b84c519e9732d13422b6e89226233",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 10637,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "openbank.yaml",
+      "path": "anonud4y/openbank.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "33083c231cb183042ff0ef4ba8000ac91b6c00258b69d79a6448532e306ef994",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 2587,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "outlook(o365).yaml",
+      "path": "anonud4y/outlook(o365).yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "318c99e23a16746764d77f47b7e59d43cf30cddc88256dc6e52171d4e0ae0707",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 2575,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "outlook.yaml",
+      "path": "anonud4y/outlook.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "8e8c0f95fb616bc2f02379a15d2d8052a200b53b8c35eb33b8f9db9cfc83b007",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 19902,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "outlook2.yaml",
+      "path": "anonud4y/outlook2.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "bc501dfd4c95cccf259398fc12b9264807978d0f0b38cdf7aa055f0e8d35d622",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 19933,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "outlook3(particular modified).yaml",
+      "path": "anonud4y/outlook3(particular modified).yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "e74121d7e85b1e129314c13dfbb31a7f98c655b9ac34cc5420e457941e615c13",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 10175,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "paxful.yaml",
+      "path": "anonud4y/paxful.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "1926ca8ba23b9326eb2cefee3ccdc2db57cfac1887d0c5988774ae38c61ff03d",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 7757,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "paypal(working2).yaml",
+      "path": "anonud4y/paypal(working2).yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "0ee6e239acba1725d6ab72764e3c124d9e088aa360208e50eef7be0182d9b5f3",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 5658,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "paypal.yaml",
+      "path": "anonud4y/paypal.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "6146b104de6b3782d092e45fb66b798f5e9949accc9639da1fb625ad010378ae",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 18550,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "playstation-B.yaml",
+      "path": "anonud4y/playstation-B.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "e524644fc0a37502e4aed9d7a44adc0afbdc455a0b59ee8f9bbef424a09a2cbd",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 3387,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "playstation.yaml",
+      "path": "anonud4y/playstation.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "c48f3357c1edfd604576ae72c363c6a6ad2113ef964f5e160f3d571fa939e357",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 10253,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "protonmail.yaml",
+      "path": "anonud4y/protonmail.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "53b36c3547bf9e0c6c3f383fde1bc0e2cf2746746400f8bc26b263fc87edac91",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 14823,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "qdefi.yaml",
+      "path": "cybersecurityteampk/qdefi.yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "216361a2e00d7514c8300d3171dfd5cb8a5e6a061216125119a0d656d812de79",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 17412,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "quickbooks(intuit).yaml",
+      "path": "cybersecurityteampk/quickbooks(intuit).yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "c923b2051d3e822e390e80c7e8d56f6b2cc62ae6688ca73745684b57154f3ecb",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 1098,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "rackspace.yaml",
+      "path": "anonud4y/rackspace.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "b82fa8089aa60805c60dc11c73fa9ed1fb2e9be6cfd909427312c0cfd162e3e4",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 1766,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "recaptcha-demo.yaml",
+      "path": "anonud4y/recaptcha-demo.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "774159df4d8e2d8f38d9b30ef0341a56427f67174ce401a13aab8ec4bfdc1463",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 2016,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "reddit.yaml",
+      "path": "anonud4y/reddit.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "5a7d64cd8a35b31f980b8c092a67db0907a87822a20b7bc4361f47a552d4369f",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 7217,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "roblox.yaml",
+      "path": "anonud4y/roblox.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "0ae9c92f366b678621bc91851385aa58156c0e9951f604da057d0fb8ba628114",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 10144,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "schwab(under-maintain).yaml",
+      "path": "cybersecurityteampk/schwab(under-maintain).yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "f90e3e0ba8b25e863b1d994d088376b2caedeed3b7bb5ee6c3f6e0e89bcaf023",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 109171,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "schwab.yaml",
+      "path": "cybersecurityteampk/schwab.yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "2443660c8c3e8fcf80e028c6417a0110fde1f3a0961f70ffb960cbf64958e244",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 3152,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "snapchat.yaml",
+      "path": "anonud4y/snapchat.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "c75785ed341115646bce4876a84c0849ce424a38b0bd007731b26d9e969bdf82",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 1776,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "steam.yaml",
+      "path": "anonud4y/steam.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "71567d67dc387f2cb108f0e03373d7982beec570389a1939ae42ce2f073c98b4",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 4444,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "stripe.yaml",
+      "path": "cybersecurityteampk/stripe.yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "8d1f3e17106324aad99a98f5dd921db9d27a620b37cadc06a4c470f4404dfca2",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 6405,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "sununion.yaml",
+      "path": "cybersecurityteampk/sununion.yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "aa5838415ca20f0b6fe7858f457f129cf442940b3d4676cd243575809e53988e",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 5112,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "supersport.yaml",
+      "path": "anonud4y/supersport.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "b0876e6c852bf541a64a1b94e1f84cd83637c67314fd8b9d9fa48a686b7a3554",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 7367,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "tiktok.yaml",
+      "path": "anonud4y/tiktok.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "3c076707f92c7a1048649e3ee788f0f27aa12ca195aa9f405ecd674cd067312c",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 4204,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "tradus.yaml",
+      "path": "cybersecurityteampk/tradus.yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "da2e2e4a0d34d63a452322f2fe5f57416aa79b6abb8a2a7cc3917a3b772d4cea",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 1323,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "twitter-mobile.yaml",
+      "path": "anonud4y/twitter-mobile.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "7e622379aaab9adfb134b19570e9b0fe87e3c206f21e0f56f5cf5dee544420ff",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 602,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "twitter.yaml",
+      "path": "anonud4y/twitter.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "3278720169e71bf3d6ca52d80e80f6c2238a8cf8a13fa74abc508a7f09a77a63",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 15506,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "txstate.yaml",
+      "path": "cybersecurityteampk/txstate.yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "e094dc2a9ec5fe9800948a640f416fe610fdf155874e897d3cba6cc86f854083",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 1127,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "usaa.yaml",
+      "path": "cybersecurityteampk/usaa.yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "335ac01e952db33997b844a2e7c506d541e353d6e82ead3fde51e4879fde736a",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 29357,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "vanguard.yaml",
+      "path": "anonud4y/vanguard.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "2e0b4a5fb14bdba54e683a23953b8dbff1dc0facd164a114960c81a8f48d2aaf",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 9045,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "venmo(working).yaml",
+      "path": "cybersecurityteampk/venmo(working).yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "57630a0b38ad185ff8a8d0706ff9cebfd12f47526ceeeb90cc3a17e124316fe2",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 9190,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "venmo.yaml",
+      "path": "cybersecurityteampk/venmo.yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "57f5a53203d19daa9bb094b442bc029a374686af5be71741e5536e35590e9f9c",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 16459,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "venmo2.yaml",
+      "path": "cybersecurityteampk/venmo2.yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "c7ffb81b3cd5cfcfe18363f998cd64428423814d5a8713d89e7992941884587d",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 2079,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "viber.yaml",
+      "path": "anonud4y/viber.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "9ead7762374bd157d96e8ee616b1de1f57d8c3e3f83be26b856baf31009bc705",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 3803,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "vrbo.yaml",
+      "path": "anonud4y/vrbo.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "fad24e668a055c8366d7398fbd98be259da126501bf806b3ab00da97d3eaedc2",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 2128,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "webhinet.yaml",
+      "path": "anonud4y/webhinet.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "b2c50b712c824619777b43b60a20da026886b6ea40fb07111a97e6ed90dfa12b",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 25839,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "westernunion.yaml",
+      "path": "cybersecurityteampk/westernunion.yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "79816edc41cd5e2aeb19f0227e9cb9ab0b5abcc54931c6bf29813f8762828805",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 2493,
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "name": "woodforest.yaml",
+      "path": "cybersecurityteampk/woodforest.yaml",
+      "priority": 2,
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "sha256": "e3130262a4adfed3a225075d6eb93c5caeeba93b1253dc1b148f8a80c5c35a03",
+      "source": "cybersecurityteampk"
+    },
+    {
+      "bytes": 2668,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "wordpress.org.yaml",
+      "path": "anonud4y/wordpress.org.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "2e626709bffdcf6e91ae31b6d6246726b578d47176ffde788911d9bf959e951b",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 33131,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "xfinity.yaml",
+      "path": "anonud4y/xfinity.yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "5ab6af3dfe841687adf5950f093a02c7e8b705a778882d572be7fa8b88f50bff",
+      "source": "anonud4y"
+    },
+    {
+      "bytes": 7459,
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "name": "yahoo(fixed).yaml",
+      "path": "anonud4y/yahoo(fixed).yaml",
+      "priority": 1,
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "sha256": "242fb5fd3d3ba64baee785660a2a5e446851a9a6a3a57e0a1801b953b207db0c",
+      "source": "anonud4y"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+#!/usr/bin/make -f
+export DH_VERBOSE = 1
+# Launchpad buildds often lack crates.io access — vendor deps before upload.
+%:
+	dh $@
+
+override_dh_auto_build:
+	cargo build --release -p phishkit-cli
+
+override_dh_auto_install:
+	install -Dm755 target/release/phishkit debian/phishkit/usr/bin/phishkit
+	install -Dm755 target/release/phishkit_ctl debian/phishkit/usr/bin/phishkit_ctl
+	mkdir -p debian/phishkit/usr/share/phishkit
+	cp -a kit/evilginx/phishlets debian/phishkit/usr/share/phishkit/
+	cp -a kit/evilginx/phishlet-templates debian/phishkit/usr/share/phishkit/ 2>/dev/null || true

@@ -1,0 +1,15 @@
+Source: phishkit
+Section: utils
+Priority: optional
+Maintainer: Irruptio Security <REPLACE_ME@example.com>
+Build-Depends: debhelper-compat (= 13), cargo, rustc, golang-go, pkg-config, libssl-dev
+Standards-Version: 4.6.2
+Homepage: https://github.com/irruptio-security/phishkit
+Rules-Requires-Root: no
+
+Package: phishkit
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Authorized AiTM + awareness assessment CLI
+ phishkit is a local toolkit for authorized adversary-in-the-middle and
+ awareness assessments. This package installs the headless CLI and kit assets.

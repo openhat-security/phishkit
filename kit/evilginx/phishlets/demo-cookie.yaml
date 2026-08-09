@@ -1,0 +1,42 @@
+# =============================================================================
+# demo-cookie — cookie-session dry-run against demos/cookie
+# =============================================================================
+#
+# Upstream mock:  http://127.0.0.1:9080  (make demo-cookie)
+# Dry-run domain: demo-cookie.local.phishkit
+#
+# Auth shape: POST /login (form) → Set-Cookie: session=… → /dashboard
+# Test creds: demo@phishkit.local / demo-password
+#
+# Note: the mock speaks HTTP on :9080. For a full evilginx proxy dry-run you
+# still need a reachable HTTPS upstream (or tunnel the mock). This phishlet is
+# the capture-surface template and validates cleanly; exercise the mock directly
+# or via the desktop Target notes in demos/cookie/.
+# =============================================================================
+
+min_ver: '3.0.0'
+
+proxy_hosts:
+  - {phish_sub: '', orig_sub: '', domain: 'demo-cookie.local.phishkit', session: true, is_landing: true, auto_filter: true}
+
+auth_tokens:
+  - domain: '.demo-cookie.local.phishkit'
+    keys:
+      - 'session'
+      - 'access_token,opt'
+      - 'token,opt'
+      - 'auth,opt'
+
+credentials:
+  username:
+    key: 'username'
+    search: '(.*)'
+    type: 'post'
+  password:
+    key: 'password'
+    search: '(.*)'
+    type: 'post'
+
+login:
+  domain: 'demo-cookie.local.phishkit'
+  path: '/login'

@@ -1,0 +1,76 @@
+# =============================================================================
+# phishkit — do not commit runtime data, secrets, or build artifacts
+# =============================================================================
+
+# --- Secrets & local env (templates like .env.example ARE committed) ---------
+.env
+.env.local
+.env.*.local
+engagement.env
+secrets/
+
+# Allow checked-in env templates
+!.env.example
+!**/.env.example
+
+# --- Runtime / state (captures, sessions, lures, evilginx DB) ----------------
+run/
+*.log
+*.pid
+*.db
+
+# --- Python ------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.pyc
+.Python
+venv/
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# --- Node / Vite -------------------------------------------------------------
+node_modules/
+
+# --- Docs site (VitePress) ---------------------------------------------------
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+
+# --- Docs capture media (generated walkthrough videos) -----------------------
+docs/media/
+docs/capture/node_modules/
+docs/capture/_results_/
+
+# --- Build outputs (kit evilginx runtime) ------------------------------------
+kit/evilginx/run/
+kit/evilginx/bin/
+
+# Upstream sources live in vendor/ as git submodules (see .gitmodules).
+# Community phishlet packs are vendored under vendor/community-phishlets/
+# (refresh pins with make community-phishlets; lockfile in kit/evilginx/).
+
+# --- TLS / crypto material -----------------------------------------------------
+*.crt
+*.key
+*.pem
+*.p12
+*.pfx
+
+# --- OS / editor -------------------------------------------------------------
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+.cursor/
+
+# --- One-off migration artifacts -----------------------------------------------
+*.migrated
+
+# Rust workspace target (repo root)
+/target/

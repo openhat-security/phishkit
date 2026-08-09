@@ -1,0 +1,30 @@
+{
+  "description": "Pinned community evilginx phishlet packs for authorized learning/testing. Blobs live under vendor/community-phishlets/ (see README.md for upstream credits). Run: make community-phishlets",
+  "merge_policy": "prefer_lower_priority_number_on_basename_collision",
+  "sources": [
+    {
+      "id": "anonud4y",
+      "repo": "An0nUD4Y/Evilginx-Phishlets",
+      "commit": "20d482c5c445612ad06cc396a571adc27a33a584",
+      "priority": 1
+    },
+    {
+      "id": "cybersecurityteampk",
+      "repo": "cybersecurityteampk/evilginx3-phishlets-2025",
+      "commit": "2e6d3e5fdf060104c459244b258abfe7b7ec55ef",
+      "priority": 2
+    },
+    {
+      "id": "klezvirus",
+      "repo": "klezVirus/evilginx-collection",
+      "commit": "d67d028ea489673eda93e88167502dc7f5c0b896",
+      "priority": 3
+    },
+    {
+      "id": "simplerhacking",
+      "repo": "simplerhacking/Evilginx3-Phishlets",
+      "commit": "7b8a593f34841aa4da53acd8beeecc9c9128d390",
+      "priority": 4
+    }
+  ]
+}

