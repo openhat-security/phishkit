@@ -11,9 +11,9 @@
 
 ## Checklist
 
-- [ ] `make check` / `make lint` pass
+- [ ] `make test` / `make lint` pass
 - [ ] `make docs-build` passes (when docs changed)
-- [ ] Change is in the supported surface (`apps/`, `crates/`, `demos/`, `docs/`) — not resurrecting removed stacks
+- [ ] Change is in the supported surface (`apps/`, `crates/`, `demos/`, `docs/`, `tests/`) — not resurrecting removed stacks
 - [ ] CLI (`phishkit` / `phishkit wiz`) updated when a new desktop capability should be scriptable
 - [ ] Authorized-use gate and allow-listed replay preserved (no silent bypass)
 - [ ] No captured credentials, tokens, cookies, recipient PII, secrets, or `run/` state committed

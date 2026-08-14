@@ -21,3 +21,7 @@ serde_json = "1"
 [dev-dependencies]
 phishkit-core = { path = "../../crates/phishkit-core" }
 serde_json = "1"
+
+[[test]]
+name = "cli_smoke"
+path = "../../tests/unit/cli_smoke.rs"

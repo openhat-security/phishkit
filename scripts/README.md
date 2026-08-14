@@ -7,13 +7,13 @@ Operator and maintainer automation. **Python and shell are intentional here**
 |--------|---------|
 | `sync_community_phishlets.py` | Refresh `vendor/community-phishlets/` from lockfile pins |
 | `ensure_vendors.sh` | Init/update `vendor/evilginx2` submodule |
-| `e2e_destinations.py` / `e2e_demo_videos.py` | Optional e2e / docs video helpers |
+| `destinations_test.py` / `demo_videos.py` | Optional Destinations / docs video helpers |
 | `publish_docs_videos.sh` | Upload walkthrough media to the `docs-media` release |
 
 Campaigns and captures: use `phishkit wiz` / `list-captures` / `delete-capture`
 (or `make session-list` / `make session-delete`).
 
-Optional Python deps for Playwright/pexpect e2e:
+Optional Python deps for Playwright/pexpect helpers:
 
 ```bash
 python3 -m pip install -r scripts/requirements.txt

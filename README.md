@@ -66,14 +66,15 @@ box.
 | `crates/phishkit-core/` | Shared Rust engine |
 | `kit/evilginx/` | Kit-owned phishlets, scripts, inject helpers |
 | `demos/` | Localhost practice apps (`cookie`, `firebase`) |
-| `docs/` | VitePress docs; `docs/capture/` → `docs/media/` (gitignored) |
+| `docs/` | VitePress docs; generated videos in `docs/media/` (gitignored) |
+| `tests/` | `unit/` (Rust) and `integration/` (desktop UI + Docker) |
 | `vendor/` | `evilginx2` submodule + community phishlet packs |
 | `scripts/` | Automation helpers (Python/shell) |
 | `packaging/` | Homebrew / AUR / Debian stubs |
 
 ## Install
 
-phishkit is **pre-alpha** (`v0.0.1`) software; build it from source and run it
+phishkit is **pre-1.0** (`v0.1.0`) software; build it from source and run it
 locally. Use it only against domains and people you are authorized to assess.
 
 ```bash
@@ -116,9 +117,13 @@ make start          # run the desktop app
 Quality checks before a PR (these mirror CI):
 
 ```bash
-make check          # cargo fmt --check + cargo test
+make test           # cargo fmt --check + cargo test (core + cli)
 make lint           # cargo clippy --all-targets
+make test-integration-docker   # desktop UI suite in Linux+Xvfb (optional)
 ```
+
+See [Testing](docs/guide/testing.md). Do not run the desktop UI suite against
+your live Application Support database.
 
 Work on the documentation site:
 
@@ -144,6 +149,8 @@ The full site is at
 - [Authorized use](docs/guide/authorized-use.md)
 - [Install](docs/guide/install.md)
 - [Quick start](docs/guide/quick-start.md)
+- [Testing](docs/guide/testing.md)
+- [Walkthrough videos](docs/guide/walkthrough.md)
 - [Campaign guide](docs/guide/campaigns.md)
 - [Phishlet authoring](docs/guide/phishlets.md)
 - [Command line](docs/guide/cli.md)

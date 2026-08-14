@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-End-to-end Destinations integration test (steps 1–4).
+Destinations integration test (steps 1–4).
 
 Mirrors the desktop Destinations page by calling the same Rust control-plane
 paths via `phishkit_ctl`, then uses Playwright to open the lure and submit
@@ -9,15 +9,15 @@ Firebase tokens) lands in the profile DB.
 
 Authorized assessments only. Credentials via env (never committed):
 
-  E2E_EMAIL=you@example.com
-  E2E_PASSWORD=secret
-  make e2e-destinations
+  TEST_EMAIL=you@example.com
+  TEST_PASSWORD=secret
+  make test-destinations
 
 Optional:
-  E2E_TARGET=demo-cookie.local.phishkit   (default)
-  E2E_HEADED=1                           show the browser
-  E2E_KEEP_PROXY=1                       leave evilginx running
-  E2E_TIMEOUT=90                         seconds to wait for capture
+  TEST_TARGET=demo-cookie.local.phishkit   (default)
+  TEST_HEADED=1                           show the browser
+  TEST_KEEP_PROXY=1                       leave evilginx running
+  TEST_TIMEOUT=90                         seconds to wait for capture
 """
 from __future__ import annotations
 
@@ -30,23 +30,23 @@ import urllib.parse
 from pathlib import Path
 
 KIT_ROOT = Path(__file__).resolve().parent.parent
-CTL = KIT_ROOT / "desktop" / "src-tauri" / "target" / "debug" / "phishkit_ctl"
-ARTIFACTS = KIT_ROOT / "run" / "e2e"
+CTL = KIT_ROOT / "target" / "debug" / "phishkit_ctl"
+ARTIFACTS = KIT_ROOT / "tests" / "integration" / "artifacts"
 
 
-class E2EError(RuntimeError):
+class DestinationsError(RuntimeError):
     pass
 
 
 def log(msg: str) -> None:
-    print(f"[e2e] {msg}", flush=True)
+    print(f"[destinations] {msg}", flush=True)
 
 
 def ctl(*args: str) -> dict:
     if not CTL.is_file():
-        raise E2EError(
+        raise DestinationsError(
             f"phishkit_ctl missing at {CTL}\n"
-            "Build with: (cd apps/desktop/src-tauri && cargo build --bin phishkit_ctl)"
+            "Build with: cargo build -p phishkit-cli --bin phishkit_ctl"
         )
     env = os.environ.copy()
     env["PHISHKIT_ROOT"] = str(KIT_ROOT)
@@ -60,7 +60,7 @@ def ctl(*args: str) -> dict:
         env=env,
     )
     if proc.returncode != 0:
-        raise E2EError(
+        raise DestinationsError(
             f"phishkit_ctl {' '.join(args)} failed ({proc.returncode}):\n"
             f"{proc.stderr or proc.stdout}"
         )
@@ -70,17 +70,17 @@ def ctl(*args: str) -> dict:
     try:
         return json.loads(out)
     except json.JSONDecodeError as e:
-        raise E2EError(f"invalid JSON from phishkit_ctl: {e}\n{out[:2000]}") from e
+        raise DestinationsError(f"invalid JSON from phishkit_ctl: {e}\n{out[:2000]}") from e
 
 
 def require_creds() -> tuple[str, str]:
-    email = os.environ.get("E2E_EMAIL", "").strip()
-    password = os.environ.get("E2E_PASSWORD", "").strip()
+    email = os.environ.get("TEST_EMAIL", "").strip()
+    password = os.environ.get("TEST_PASSWORD", "").strip()
     if not email or not password:
-        raise E2EError(
-            "Set E2E_EMAIL and E2E_PASSWORD for the authorized test account.\n"
+        raise DestinationsError(
+            "Set TEST_EMAIL and TEST_PASSWORD for the authorized test account.\n"
             "Example:\n"
-            "  E2E_EMAIL='user@example.com' E2E_PASSWORD='…' make e2e-destinations"
+            "  TEST_EMAIL='user@example.com' TEST_PASSWORD='…' make test-destinations"
         )
     return email, password
 
@@ -130,7 +130,7 @@ def wait_for_capture(profile_id: str, email: str, timeout: float) -> dict:
     # dump last for debugging
     ARTIFACTS.mkdir(parents=True, exist_ok=True)
     (ARTIFACTS / "last_captures.json").write_text(json.dumps(last, indent=2)[:50000])
-    raise E2EError(
+    raise DestinationsError(
         f"No non-empty capture for {email!r} within {timeout:.0f}s. "
         f"See {ARTIFACTS / 'last_captures.json'} and kit/evilginx/run/evilginx.log"
     )
@@ -140,14 +140,14 @@ def browser_login(lure_url: str, email: str, password: str) -> None:
     try:
         from playwright.sync_api import sync_playwright
     except ImportError as e:
-        raise E2EError(
+        raise DestinationsError(
             "playwright not installed. Run:\n"
             "  python3 -m pip install -r scripts/requirements.txt\n"
             "  python3 -m playwright install chromium"
         ) from e
 
     ARTIFACTS.mkdir(parents=True, exist_ok=True)
-    headed = os.environ.get("E2E_HEADED", "").strip() in ("1", "true", "yes")
+    headed = os.environ.get("TEST_HEADED", "").strip() in ("1", "true", "yes")
     log(f"Playwright → {lure_url} (headed={headed})")
 
     with sync_playwright() as p:
@@ -227,10 +227,10 @@ def browser_login(lure_url: str, email: str, password: str) -> None:
 
 
 def main() -> int:
-    target = os.environ.get("E2E_TARGET", "demo-cookie.local.phishkit").strip()
+    target = os.environ.get("TEST_TARGET", "demo-cookie.local.phishkit").strip()
     email, password = require_creds()
-    timeout = float(os.environ.get("E2E_TIMEOUT", "90"))
-    keep = os.environ.get("E2E_KEEP_PROXY", "").strip() in ("1", "true", "yes")
+    timeout = float(os.environ.get("TEST_TIMEOUT", "90"))
+    keep = os.environ.get("TEST_KEEP_PROXY", "").strip() in ("1", "true", "yes")
 
     log(f"KIT_ROOT={KIT_ROOT}")
     log(f"target={target} email={email}")
@@ -245,7 +245,7 @@ def main() -> int:
     )
     profile_id = profile.get("id")
     if not profile_id or not phishlet or not dryrun:
-        raise E2EError(f"ensure-destination incomplete: {json.dumps(setup)[:2000]}")
+        raise DestinationsError(f"ensure-destination incomplete: {json.dumps(setup)[:2000]}")
     if not setup.get("firebase_hooks"):
         log("WARNING: phishlet may lack Firebase js_inject — captures can be empty")
     log(f"profile={profile_id} phishlet={phishlet} dryrun={dryrun}")
@@ -260,7 +260,7 @@ def main() -> int:
         log(f"hosts-fix → {fix}")
         hs = ctl("hosts-status", "--dryrun", dryrun, "--phishlet", phishlet)
         if not hs.get("hosts_ok"):
-            raise E2EError(
+            raise DestinationsError(
                 " /etc/hosts still incomplete after hosts-fix. "
                 "Add these lines manually (sudo) and re-run:\n"
                 + "\n".join(hs.get("missing_lines") or [])
@@ -280,9 +280,9 @@ def main() -> int:
     )
     lure_url = (lure.get("lure_url") or "").strip()
     if not lure_url:
-        raise E2EError(f"no lure_url from start-lure: {json.dumps(lure)[:2000]}")
+        raise DestinationsError(f"no lure_url from start-lure: {json.dumps(lure)[:2000]}")
     if not lure.get("evilginx_running") and not lure.get("ok"):
-        raise E2EError(f"evilginx did not start: {lure.get('message')}")
+        raise DestinationsError(f"evilginx did not start: {lure.get('message')}")
     log(f"lure={lure_url}")
     log(f"proxy message: {lure.get('message')}")
 
@@ -296,7 +296,7 @@ def main() -> int:
     try:
         browser_login(lure_url, email, password)
     except Exception as e:
-        raise E2EError(f"browser login failed: {e}") from e
+        raise DestinationsError(f"browser login failed: {e}") from e
 
     log("Step 4: sync captures and assert")
     result = wait_for_capture(profile_id, email, timeout)
@@ -322,19 +322,19 @@ def main() -> int:
     )
 
     if not keep:
-        log("stopping evilginx (set E2E_KEEP_PROXY=1 to leave up)")
+        log("stopping evilginx (set TEST_KEEP_PROXY=1 to leave up)")
         try:
             ctl("stop")
-        except E2EError as e:
+        except DestinationsError as e:
             log(f"stop warning: {e}")
 
-    log("PASS — Destinations e2e complete")
+    log("PASS — Destinations test complete")
     return 0
 
 
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except E2EError as e:
-        print(f"[e2e] FAIL: {e}", file=sys.stderr)
+    except DestinationsError as e:
+        print(f"[destinations] FAIL: {e}", file=sys.stderr)
         raise SystemExit(1)

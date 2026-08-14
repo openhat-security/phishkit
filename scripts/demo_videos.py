@@ -4,8 +4,8 @@
 Starts neither demo servers nor evilginx — callers must already have demos up
 (or use `make docs-videos`). Built-in demo credentials; no mailbox required.
 
-  make docs-videos
-  # or: python3 scripts/e2e_demo_videos.py
+  make update-video-documentation-demos
+  # or: python3 scripts/demo_videos.py
 
 Outputs normalized MP4s under docs/media/.
 """
@@ -20,8 +20,8 @@ import urllib.request
 from pathlib import Path
 
 KIT_ROOT = Path(__file__).resolve().parent.parent
-OUT = KIT_ROOT / "run" / "e2e-videos"
-RAW = OUT / "_raw"
+OUT = KIT_ROOT / "docs" / "media"
+RAW = KIT_ROOT / "tests" / "integration" / "artifacts" / "demo-videos-raw"
 
 
 def log(msg: str) -> None:

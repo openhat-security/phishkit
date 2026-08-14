@@ -1279,3 +1279,23 @@ pub fn recipient_vars(r: &Recipient, link: &str) -> HashMap<String, String> {
     }
     m
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn mail_secret_redaction() {
+        assert_eq!(mask_secret(""), "");
+        assert_eq!(mask_secret("hunter2"), SECRET_MASK);
+    }
+
+    #[test]
+    fn merge_tags_replaces_known_and_keeps_unknown() {
+        let mut vars = HashMap::new();
+        vars.insert("first_name".into(), "Ada".into());
+        vars.insert("link".into(), "https://lure.test".into());
+        let out = merge_tags("Hi {{ first_name }}, click {{link}} {{missing}}", &vars);
+        assert_eq!(out, "Hi Ada, click https://lure.test {{missing}}");
+    }
+}

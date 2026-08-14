@@ -25,7 +25,7 @@ if ! gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
   gh release create "$TAG" \
     --repo "$REPO" \
     --title "Docs walkthrough media" \
-    --notes "Recorded e2e walkthrough videos for the VitePress docs site. Regenerate with \`make docs-videos\` and re-upload with \`make publish-docs-videos\`." \
+    --notes "Recorded walkthrough videos for the VitePress docs site. Regenerate with \`make update-video-documentation\` and re-upload with \`make publish-docs-videos\`." \
     --latest=false
 fi
 

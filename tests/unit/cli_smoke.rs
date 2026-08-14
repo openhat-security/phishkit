@@ -34,9 +34,7 @@ fn missing_required_flag_is_err() {
 
 #[test]
 fn short_id_flag_accepted() {
-    // Missing resource is ok — we only assert flag parsing reaches the engine.
     let err = cli::run("get-assessment", &["-i".into(), "no-such-id".into()]);
-    // Either Ok(null) or Err(not found) depending on DB; must not be "missing -i/--id"
     if let Err(e) = err {
         assert!(!e.to_string().contains("missing"), "{e}");
     }
@@ -81,4 +79,15 @@ fn binary_help_exits_zero() {
     assert!(stderr.contains("USAGE"));
     assert!(stderr.contains("setup-get"));
     assert!(!stderr.contains('\u{1b}'), "NO_COLOR should disable ANSI");
+}
+
+#[test]
+fn ctl_help_exits_zero() {
+    let bin = env!("CARGO_BIN_EXE_phishkit_ctl");
+    let out = Command::new(bin)
+        .env("NO_COLOR", "1")
+        .args(["--help"])
+        .output()
+        .expect("run phishkit_ctl --help");
+    assert!(out.status.success());
 }

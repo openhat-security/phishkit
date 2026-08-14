@@ -54,23 +54,25 @@ Requires Rust (`~/.cargo/bin` on PATH), Node 18+, and once: `make build-evilginx
 
 Set `PHISHKIT_ROOT` if kit discovery fails (dev defaults to repo root).
 
-## Destinations e2e (steps 1–4)
+## Destinations mailbox test (steps 1–4)
 
-Integration test that drives the same control-plane paths as the Destinations
-UI (`phishkit_ctl`), then uses Playwright to open the lure and submit login:
+Opt-in check that drives the same control-plane paths as the Destinations
+UI (`phishkit_ctl`), then uses Playwright to open the lure and submit login.
+Not part of `make test-integration-docker`.
 
 ```bash
-E2E_EMAIL='you@example.com' E2E_PASSWORD='…' make e2e-destinations
+TEST_EMAIL='you@example.com' TEST_PASSWORD='…' make test-destinations
 
 # optional
-E2E_TARGET=demo-cookie.local.phishkit E2E_HEADED=1 E2E_KEEP_PROXY=1 \
-  E2E_EMAIL=… E2E_PASSWORD=… make e2e-destinations
+TEST_TARGET=demo-cookie.local.phishkit TEST_HEADED=1 TEST_KEEP_PROXY=1 \
+  TEST_EMAIL=… TEST_PASSWORD=… make test-destinations
 ```
 
-Artifacts land in `run/e2e/` (`result.json`, screenshots). Passes when a
-capture has username+password and/or Firebase tokens. Prefer the localhost
-demos (`make demo-cookie` / `make demo-firebase`) for first-run practice —
-see `demos/`.
+Artifacts land in `tests/integration/artifacts/` (`result.json`, screenshots).
+Passes when a capture has username+password and/or Firebase tokens. Prefer the
+localhost demos (`make demo-cookie` / `make demo-firebase`) for first-run
+practice — see `demos/`. The default desktop UI suite is
+`make test-integration-docker` (see [Testing](../../docs/guide/testing.md)).
 
 ## Data
 

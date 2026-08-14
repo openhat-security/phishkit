@@ -70,7 +70,9 @@ export default function SettingsView({ append, onStartTutorial, onSetupChanged }
         <div className="settings-grid">
           <div>
             <strong>Storage mode</strong>
-            <p className="muted small">{info.storageMode}</p>
+            <p className="muted small" data-testid="settings-storage-mode">
+              {info.storageMode}
+            </p>
           </div>
           <div>
             <strong>Config</strong>

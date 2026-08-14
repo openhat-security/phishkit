@@ -40,10 +40,11 @@ node_modules/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
 
-# --- Docs capture media (generated walkthrough videos) -----------------------
+# --- Docs / test media (generated walkthrough videos) -----------------------
 docs/media/
-docs/capture/node_modules/
-docs/capture/_results_/
+tests/integration/node_modules/
+tests/integration/artifacts/
+tests/integration/_results_/
 
 # --- Build outputs (kit evilginx runtime) ------------------------------------
 kit/evilginx/run/

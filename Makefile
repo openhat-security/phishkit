@@ -4,11 +4,11 @@
 	evilginx-start evilginx-stop \
 	demo demo-cookie demo-firebase demo-tunnel \
 	vendor community-phishlets desktop cli \
-	setup start check lint docs docs-build \
-	campaign quick-test e2e e2e-destinations \
+	setup start check lint test test-unit test-integration test-integration-docker \
+	test-destinations docs docs-build \
+	campaign quick-test \
 	update-video-documentation update-video-documentation-desktop \
 	update-video-documentation-demos publish-docs-videos \
-	e2e-tauri docs-videos docs-videos-demos \
 	clean session-delete session-list
 
 # =============================================================================
@@ -49,18 +49,20 @@ help:
 	@echo "Developer workflow:"
 	@echo "  make setup                   # rust check + desktop deps + docs deps"
 	@echo "  make start                   # run the supported desktop app (alias of desktop)"
-	@echo "  make check                   # cargo fmt --check + cargo test (core + cli)"
+	@echo "  make test / make test-unit   # cargo fmt --check + cargo test (core + cli)"
 	@echo "  make lint                    # cargo clippy (workspace packages)"
+	@echo "  make test-integration-docker # desktop UI suite in Linux+Xvfb (no host windows)"
+	@echo "  make test-integration        # same suite on the host (sandboxed; pops a window)"
 	@echo "  make docs                    # VitePress docs preview (hot reload)"
 	@echo "  make docs-build              # build docs; fails on unresolved internal links"
 	@echo ""
-	@echo "Docs walkthrough videos:"
+	@echo "Docs walkthrough videos (opt-in VIDEO=1 on the integration suite):"
 	@echo "  make update-video-documentation          # desktop tour + demo logins"
 	@echo "  make update-video-documentation-desktop  # WebdriverIO Tauri console tour"
 	@echo "  make update-video-documentation-demos    # Playwright demo-cookie / demo-firebase"
 	@echo "  make publish-docs-videos                 # upload walkthrough-*.mp4 → Release docs-media"
-	@echo "  E2E_EMAIL=… E2E_PASSWORD=… make e2e-destinations   # lure + evilginx (mailbox)"
-	@echo "  # optional: E2E_TARGET=demo-cookie.local.phishkit E2E_HEADED=1 E2E_KEEP_PROXY=1"
+	@echo "  TEST_EMAIL=… TEST_PASSWORD=… make test-destinations   # lure + evilginx (mailbox)"
+	@echo "  # optional: TEST_TARGET=demo-cookie.local.phishkit TEST_HEADED=1 TEST_KEEP_PROXY=1"
 	@echo ""
 	@echo "All-in-one build:"
 	@echo "  make build"
@@ -129,6 +131,7 @@ vendor-update:
 	@./scripts/ensure_vendors.sh
 
 # Combined build: ensure upstream sources exist, then build the evilginx binary.
+# Gophish has been removed; only the evilginx binary is built.
 build: vendor build-evilginx
 
 # -----------------------------------------------------------------------------
@@ -166,7 +169,11 @@ setup:
 start: desktop
 
 # Fast quality gates for the native engine (mirrors CI).
-check:
+check: test-unit
+
+test: test-unit
+
+test-unit:
 	@export PATH="$$HOME/.cargo/bin:$$PATH"; \
 	command -v cargo >/dev/null || { echo "cargo not found"; exit 1; }; \
 	cargo fmt --all -- --check && \
@@ -206,51 +213,62 @@ quick-test:
 	@TARGET_CLEAN="$$(echo '$(TARGET)' | sed -E 's#^https?://##; s#/.*##; s#:.*##')"; \
 	python3 scripts/quick_assessment.py --target-domain "$$TARGET_CLEAN" --email "$(EMAIL)" $(if $(KEEP_RUNNING),--keep-running,)
 
-# Destinations page e2e: steps 1–4 via phishkit_ctl + Playwright lure login.
-# Requires authorized test mailbox credentials in the environment.
+# Destinations mailbox check: steps 1–4 via phishkit_ctl + Playwright lure login.
+# Requires authorized test mailbox credentials. Not part of the default Docker suite.
 # Example:
-#   E2E_EMAIL=user@client.com E2E_PASSWORD=secret make e2e-destinations
-#   E2E_EMAIL=… E2E_PASSWORD=… E2E_HEADED=1 E2E_KEEP_PROXY=1 make e2e-destinations
-e2e-destinations:
+#   TEST_EMAIL=user@client.com TEST_PASSWORD=secret make test-destinations
+test-destinations:
 	@export PATH="$$HOME/.cargo/bin:$$PATH"; \
 	command -v cargo >/dev/null || { echo "cargo not found"; exit 1; }; \
-	test -n "$$E2E_EMAIL" || { echo "E2E_EMAIL required"; exit 1; }; \
-	test -n "$$E2E_PASSWORD" || { echo "E2E_PASSWORD required"; exit 1; }; \
+	test -n "$$TEST_EMAIL" || { echo "TEST_EMAIL required"; exit 1; }; \
+	test -n "$$TEST_PASSWORD" || { echo "TEST_PASSWORD required"; exit 1; }; \
 	if [ ! -x venv/bin/python ]; then python3 -m venv venv; fi; \
 	./venv/bin/python -m pip install -q -r scripts/requirements.txt; \
 	./venv/bin/python -m playwright install chromium; \
 	cargo build -p phishkit-cli --bin phishkit_ctl; \
-	E2E_TARGET="$${E2E_TARGET:-demo-cookie.local.phishkit}" \
-	  ./venv/bin/python scripts/e2e_destinations.py
+	TEST_TARGET="$${TEST_TARGET:-demo-cookie.local.phishkit}" \
+	  ./venv/bin/python scripts/destinations_test.py
+
+# Sandboxed desktop UI suite on the host (will open a window). Prefer Docker.
+test-integration:
+	@export PATH="$$HOME/.cargo/bin:$$PATH"; \
+	command -v cargo >/dev/null || { echo "cargo not found"; exit 1; }; \
+	SANDBOX="$${PHISHKIT_DATA:-$$(mktemp -d /tmp/phishkit-test.XXXXXX)}"; \
+	export PHISHKIT_CONFIG="$${PHISHKIT_CONFIG:-$$SANDBOX/config}"; \
+	export PHISHKIT_DATA="$${PHISHKIT_DATA:-$$SANDBOX/data}"; \
+	export PHISHKIT_ROOT="$(CURDIR)"; \
+	mkdir -p "$$PHISHKIT_CONFIG" "$$PHISHKIT_DATA" tests/integration/artifacts run; \
+	echo "sandbox config=$$PHISHKIT_CONFIG data=$$PHISHKIT_DATA"; \
+	(cd demos && npm install --silent && npm run demo:cookie) & echo $$! > run/demo-cookie.pid; \
+	sleep 1; \
+	trap 'kill $$(cat run/demo-cookie.pid) 2>/dev/null || true; rm -f run/demo-cookie.pid' EXIT; \
+	(cd apps/desktop && npm install && VITE_TEST_HOOKS=1 npm run build); \
+	cargo build --release -p phishkit --features test-hooks,custom-protocol; \
+	(cd tests/integration && npm install && \
+	  PHISHKIT_TEST_BIN="$(CURDIR)/target/release/phishkit" npm test)
+
+# Default UI suite: Linux Tauri + Xvfb in Docker. No host windows, no host app-data.
+test-integration-docker:
+	@command -v docker >/dev/null || { echo "docker not found — start Docker Desktop"; exit 1; }; \
+	docker compose -f tests/integration/docker-compose.yml up --build --abort-on-container-exit --exit-code-from integration
 
 # -----------------------------------------------------------------------------
 # Docs walkthrough videos (gitignored under docs/media/)
 # -----------------------------------------------------------------------------
-# Prefer: make e2e   (or make update-video-documentation)
 # Pieces: update-video-documentation-desktop | update-video-documentation-demos
 # Publish: make publish-docs-videos  → GitHub Release tag docs-media
 
-# Desktop console tour (WebdriverIO + embedded WebDriver). Starts demo-cookie,
-# builds a release e2e binary with embedded frontend, writes walkthrough-assessment.mp4.
+# Desktop console tour: same suite as test-integration with VIDEO=1, then remux.
 update-video-documentation-desktop:
 	@export PATH="$$HOME/.cargo/bin:$$PATH"; \
 	command -v cargo >/dev/null || { echo "cargo not found"; exit 1; }; \
-	mkdir -p docs/media run; \
-	(cd demos && npm install --silent && npm run demo:cookie) & echo $$! > run/demo-cookie.pid; \
-	sleep 1; \
-	trap 'kill $$(cat run/demo-cookie.pid) 2>/dev/null || true; rm -f run/demo-cookie.pid' EXIT; \
-	(cd apps/desktop && npm install && VITE_E2E=1 npm run build); \
-	# custom-protocol embeds frontendDist (plain cargo build without it stays on devUrl / about:blank).
-	cargo build --release -p phishkit --features e2e,custom-protocol; \
-	(cd docs/capture && npm install && \
-	  PHISHKIT_E2E_BIN="$(CURDIR)/target/release/phishkit" npm test) && \
-	f=$$(ls -t docs/media/full-product-tour*.mp4 docs/media/full-product-tour*.webm \
-	       docs/media/*Sessions*.webm docs/media/*Sessions*.mp4 \
-	       docs/media/*.webm docs/media/*.mp4 2>/dev/null | head -1); \
+	mkdir -p docs/media tests/integration/artifacts; \
+	VIDEO=1 $(MAKE) test-integration; \
+	f=$$(ls -t tests/integration/artifacts/*.mp4 tests/integration/artifacts/*.webm \
+	       2>/dev/null | head -1); \
 	if [ -n "$$f" ]; then \
 	  out=docs/media/walkthrough-assessment.mp4; \
 	  if command -v ffmpeg >/dev/null 2>&1; then \
-	    # Remux/reencode so moov is complete (wdio-video-reporter mp4 can be unseekable). \
 	    ffmpeg -y -i "$$f" -c:v libx264 -pix_fmt yuv420p -movflags +faststart "$$out" >/dev/null 2>&1; \
 	  else \
 	    case "$$f" in \
@@ -272,15 +290,10 @@ update-video-documentation-demos:
 	if [ ! -x venv/bin/python ]; then python3 -m venv venv; fi; \
 	./venv/bin/python -m pip install -q -r scripts/requirements.txt; \
 	./venv/bin/python -m playwright install chromium; \
-	./venv/bin/python scripts/e2e_demo_videos.py
+	./venv/bin/python scripts/demo_videos.py
 
 # Full docs media suite: desktop tour + demo logins.
 update-video-documentation: update-video-documentation-desktop update-video-documentation-demos
-
-# Canonical short aliases for the docs video suite.
-e2e: update-video-documentation
-e2e-video-documentation: update-video-documentation
-e2e-tauri: update-video-documentation-desktop
 
 publish-docs-videos:
 	@chmod +x scripts/publish_docs_videos.sh
@@ -308,4 +321,6 @@ session-delete:
 # Cleanup
 # -----------------------------------------------------------------------------
 clean:
-	rm -rf run/ kit/evilginx/run/ kit/evilginx/bin/ docs/media/ docs/capture/node_modules/ docs/.vitepress/dist docs/.vitepress/cache
+	rm -rf run/ kit/evilginx/run/ kit/evilginx/bin/ docs/media/ \
+	  tests/integration/node_modules/ tests/integration/artifacts/ \
+	  docs/.vitepress/dist docs/.vitepress/cache

@@ -1,7 +1,8 @@
 # Walkthrough videos
 
 Recorded tours of the supported desktop app and the localhost demos. Use them
-alongside the [quick start](/guide/quick-start).
+alongside the [quick start](/guide/quick-start). The same automation is an
+**assertion suite** first — see [Testing](/guide/testing). Video is opt-in.
 
 ::: warning Authorized use only
 phishkit is for written, in-scope assessments. The demos and recordings use
@@ -11,11 +12,9 @@ to test. See [authorized use](/guide/authorized-use).
 
 ## Desktop assessment walkthrough
 
-Full console tour at a followable pace: create an Assessment (all fields), Overview
-lifecycle, Templates, Recipients, Delivery presets, Campaigns (Guided / Composer /
-Express), Results, Targets → cookie-session demo, Recon & Proxy, Sessions filters, context
-switchers, and the Activity log. Does not send real mail or confirm destructive
-purge/archive.
+Full console tour: create an Assessment, Overview lifecycle, Templates,
+Recipients, Delivery presets, Campaigns (Guided / Composer / Express), Results,
+Targets → cookie-session demo, Recon & Proxy, Sessions filters, and Settings.
 
 <video controls playsinline preload="metadata" style="width:100%;max-width:960px;border-radius:8px;background:#0a0e15"><source src="https://github.com/irruptio-security/phishkit/releases/download/docs-media/walkthrough-assessment.mp4" type="video/mp4" /><source src="https://github.com/irruptio-security/phishkit/releases/download/docs-media/walkthrough-assessment.webm" type="video/webm" /></video>
 
@@ -37,7 +36,7 @@ Media is published to the
 GitHub Release (not committed to git). If a player is blank, regenerate and upload:
 
 ```bash
-make e2e                    # or: make update-video-documentation
+make update-video-documentation
 make publish-docs-videos    # requires gh auth + access to the docs-media release
 ```
 :::
@@ -48,31 +47,34 @@ Videos are **generated**, not edited by hand. They live under `docs/media/`
 (gitignored). VitePress embeds stable GitHub Release URLs so the docs site stays
 small.
 
+The desktop tour is the integration suite with `VIDEO=1`. Prefer
+`make test-integration-docker` for assertions without recording; use the
+targets below when you need docs MP4s.
+
 ### Prerequisites
 
 | Need | Why |
 | --- | --- |
 | Rust + Node 20+ | Build the desktop app and run WebdriverIO |
+| Docker (preferred) | Isolate the UI so it does not steal the host display |
 | `ffmpeg` (recommended) | Seekable MP4 output (`brew install ffmpeg`) |
 | `gh` auth (publish only) | Upload to the `docs-media` Release |
-| macOS for the desktop tour | Embedded WebDriver targets WKWebView |
 
 ### One command (everything)
 
 ```bash
-make e2e
-# equivalent:
 make update-video-documentation
 ```
 
 This:
 
-1. Builds the React UI with `VITE_E2E=1` and a **release** Tauri binary with
-   `--features e2e,custom-protocol` (embeds `frontendDist`; debug builds without
-   `custom-protocol` stay on Vite `devUrl` and WebDriver sees `about:blank`).
+1. Builds the React UI with `VITE_TEST_HOOKS=1` and a **release** Tauri binary
+   with `--features test-hooks,custom-protocol` (embeds `frontendDist`; debug
+   builds without `custom-protocol` stay on Vite `devUrl` and WebDriver sees
+   `about:blank`).
 2. Starts the cookie-session demo on `:9080`.
-3. Runs WebdriverIO (`docs/capture`) against the real binary →
-   `docs/media/walkthrough-assessment.mp4`.
+3. Runs WebdriverIO (`tests/integration`) with `VIDEO=1` in a data sandbox →
+   remuxes into `docs/media/walkthrough-assessment.mp4`.
 4. Starts both demos and records Playwright login clips →
    `walkthrough-demo-login.mp4` and `walkthrough-demo-firebase.mp4`.
 
@@ -80,12 +82,10 @@ This:
 
 | Make target | What it records | Output |
 | --- | --- | --- |
-| `update-video-documentation-desktop` | Full desktop console tour (WDIO) | `walkthrough-assessment.mp4` |
+| `update-video-documentation-desktop` | Desktop console suite (WDIO, `VIDEO=1`) | `walkthrough-assessment.mp4` |
 | `update-video-documentation-demos` | Cookie-session demo + Firebase logins (Playwright) | `walkthrough-demo-*.mp4` |
-| `update-video-documentation` / `e2e` | Both of the above | all three |
+| `update-video-documentation` | Both of the above | all three |
 | `publish-docs-videos` | Upload `walkthrough-*.mp4` only | Release tag `docs-media` |
-
-Legacy aliases still work: `e2e-tauri`, `docs-videos`, `docs-videos-demos`.
 
 ### Publish to docs
 
@@ -95,34 +95,22 @@ make publish-docs-videos
 GITHUB_REPOSITORY=owner/repo make publish-docs-videos
 ```
 
-Only files matching `docs/media/walkthrough-*.mp4` (and `.webm`) are uploaded,
-so WDIO run leftovers are not published.
+Only files matching `docs/media/walkthrough-*.mp4` (and `.webm`) are uploaded.
 
 ### Where the automation lives
 
 | Piece | Path |
 | --- | --- |
-| Desktop tour spec | `docs/capture/specs/walkthrough.e2e.ts` |
-| WDIO config (slowdown, interval frames) | `docs/capture/wdio.conf.ts` |
-| Demo login recorder | `scripts/e2e_demo_videos.py` |
+| Desktop specs | `tests/integration/specs/*.spec.ts` |
+| WDIO config | `tests/integration/wdio.conf.ts` |
+| Demo login recorder | `scripts/demo_videos.py` |
 | Release upload | `scripts/publish_docs_videos.sh` |
-| Suite notes | `docs/capture/README.md` |
+| Suite notes | `tests/integration/README.md` |
 
-### Tuning the desktop tour
+### What the suite does not do on video runs
 
-- Dwells and character-by-character typing live in the walkthrough spec so viewers
-  can follow form fill.
-- `wdio.conf.ts` uses `screenshotIntervalSecs` so pauses appear in the stitched
-  video, plus `videoSlowdownMultiplier` for readability.
-- Prefer `ffmpeg` remux after WDIO — the Makefile does this so the MP4 has a
-  complete `moov` atom (seekable in browsers).
+Real SMTP send/test, admin `/etc/hosts` prompts, and Destinations mailbox
+login. Archive / clone / restore **are** exercised because the suite uses a
+throwaway sandbox, not your operator database.
 
-### What the tour intentionally skips
-
-Real SMTP send/test, admin `/etc/hosts` prompts, and confirming purge/archive/
-delete dialogs. Archive keeps data inactive; Delete erases the engagement from
-the app DB. Both are available in Assessments (Show archived) and Overview →
-End assessment.
-
-See also [demos/](https://github.com/irruptio-security/phishkit/tree/main/examples)
-and [release notes](/reference/release).
+See [Testing](/guide/testing) and [release notes](/reference/release).

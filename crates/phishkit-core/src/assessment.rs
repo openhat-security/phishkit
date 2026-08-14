@@ -421,6 +421,7 @@ pub fn delete_assessment(id: &str) -> AppResult<DeleteAssessmentResult> {
 
 /// Create a new active assessment from an archived (or active) one: copies
 /// metadata and Targets/Lures, not campaigns, sessions, or recipient PII.
+#[allow(clippy::type_complexity)]
 pub fn clone_assessment(id: &str) -> AppResult<Assessment> {
     let src = get_assessment(id)?.ok_or_else(|| AppError::msg("assessment not found"))?;
     let now = now_iso();
@@ -430,7 +431,7 @@ pub fn clone_assessment(id: &str) -> AppResult<Assessment> {
         if base.is_empty() {
             "Assessment copy".into()
         } else if base.contains("(copy)") {
-            format!("{base}")
+            base.to_string()
         } else {
             format!("{base} (copy)")
         }

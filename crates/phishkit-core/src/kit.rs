@@ -97,3 +97,18 @@ pub fn kit_info() -> AppResult<KitInfo> {
         active_phishlets,
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    #[test]
+    fn validate_kit_root_and_evilginx_dir() {
+        let tmp = tempfile::tempdir().unwrap();
+        assert!(validate_kit_root(tmp.path()).is_err());
+        fs::create_dir_all(tmp.path().join("kit/evilginx/phishlets")).unwrap();
+        assert!(validate_kit_root(tmp.path()).is_ok());
+        assert_eq!(evilginx_dir(tmp.path()), tmp.path().join("kit/evilginx"));
+    }
+}

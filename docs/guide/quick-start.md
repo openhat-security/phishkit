@@ -97,5 +97,8 @@ The same paths are scriptable with the [CLI](/guide/cli). The repo ships a
 Destinations end-to-end check:
 
 ```bash
-E2E_EMAIL='you@example.com' E2E_PASSWORD='…' make e2e-destinations
+TEST_EMAIL='you@example.com' TEST_PASSWORD='…' make test-destinations
 ```
+
+The default desktop UI suite (no mailbox) is `make test-integration-docker`.
+See [Testing](/guide/testing).

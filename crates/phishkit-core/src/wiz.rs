@@ -192,7 +192,7 @@ fn quickstart() -> AppResult<serde_json::Value> {
         Some(assessment.id.clone()),
     )?;
     let profile_id = dest.profile.id.clone();
-    out(&format!("{}", dest.message));
+    out(&dest.message.to_string());
     out(&format!(
         "profile={} phishlet={} dryrun={}",
         dest.profile.id, dest.profile.phishlet, dest.profile.dryrun_domain

@@ -1,0 +1,23 @@
+services:
+  integration:
+    build:
+      context: ../..
+      dockerfile: tests/integration/Dockerfile
+    working_dir: /src
+    environment:
+      PHISHKIT_CONFIG: /tmp/phishkit-test/config
+      PHISHKIT_DATA: /tmp/phishkit-test/data
+      PHISHKIT_ROOT: /src
+      PHISHKIT_TEST_BIN: /src/target/release/phishkit
+      VIDEO: ${VIDEO:-}
+      DISPLAY: ":99"
+    volumes:
+      - ../..:/src
+      - cargo-registry:/usr/local/cargo/registry
+      - cargo-git:/usr/local/cargo/git
+      - cargo-target:/src/target
+
+volumes:
+  cargo-registry:
+  cargo-git:
+  cargo-target:

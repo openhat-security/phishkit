@@ -278,3 +278,14 @@ pub fn hosts_fix(dryrun_domain: String, phishlet: Option<String>) -> AppResult<s
         }))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn required_fqdns_always_includes_apex() {
+        let fqdns = required_fqdns("acme.phishkit", "");
+        assert!(fqdns.iter().any(|f| f == "acme.phishkit"));
+    }
+}

@@ -127,11 +127,11 @@ incident-response-grade sensitive.
 make quick-test TARGET=app.client.com EMAIL=you@yourdomain.com
 ```
 
-Or Destinations e2e (authorized mailbox required):
+Or Destinations mailbox test (authorized mailbox required):
 
 ```bash
-E2E_EMAIL='you@example.com' E2E_PASSWORD='…' make e2e-destinations
-# default E2E_TARGET=demo-cookie.local.phishkit
+TEST_EMAIL='you@example.com' TEST_PASSWORD='…' make test-destinations
+# default TEST_TARGET=demo-cookie.local.phishkit
 ```
 
 ---

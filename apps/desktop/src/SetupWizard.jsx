@@ -73,6 +73,7 @@ export default function SetupWizard({ onComplete, append }) {
               <input
                 type="radio"
                 name="storage"
+                data-testid="setup-storage-persistent"
                 checked={storageMode === "persistent"}
                 onChange={() => setStorageMode("persistent")}
               />
@@ -87,6 +88,7 @@ export default function SetupWizard({ onComplete, append }) {
               <input
                 type="radio"
                 name="storage"
+                data-testid="setup-storage-ephemeral"
                 checked={storageMode === "ephemeral"}
                 onChange={() => setStorageMode("ephemeral")}
               />
@@ -124,11 +126,12 @@ export default function SetupWizard({ onComplete, append }) {
             {PERSONAS.map((p) => (
               <label key={p.id} className="setup-choice">
                 <input
-                  type="radio"
-                  name="persona"
-                  checked={persona === p.id}
-                  onChange={() => setPersona(p.id)}
-                />
+                type="radio"
+                name="persona"
+                data-testid={`setup-persona-${p.id}`}
+                checked={persona === p.id}
+                onChange={() => setPersona(p.id)}
+              />
                 <span>
                   <strong>{p.label}</strong>
                   <span className="muted small">{p.hint}</span>
@@ -151,6 +154,7 @@ export default function SetupWizard({ onComplete, append }) {
             <label className="setup-choice">
               <input
                 type="checkbox"
+                data-testid="setup-tutorial"
                 checked={wantTutorial}
                 onChange={(e) => setWantTutorial(e.target.checked)}
               />

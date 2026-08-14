@@ -1,6 +1,6 @@
 # Release process
 
-phishkit is pre-alpha (v0.0.x) software. This page describes how versions and
+phishkit is pre-1.0 (v0.1.x) software. This page describes how versions and
 releases are handled today and the roadmap toward a signed stable release.
 
 ## Versioning
@@ -28,10 +28,18 @@ builds the VitePress site and deploys it to GitHub Pages from `main`.
 Before opening a pull request:
 
 ```bash
-make check          # cargo fmt --check + cargo test
+make test           # cargo fmt --check + cargo test (alias: make check)
 make lint           # cargo clippy --all-targets
 make docs-build     # when docs changed; fails on unresolved internal links
 ```
+
+Desktop UI suite (optional, not on the PR critical path yet):
+
+```bash
+make test-integration-docker   # Linux + Xvfb; no host windows or app-data
+```
+
+See [Testing](/guide/testing).
 
 ## Docs walkthrough videos
 
@@ -39,13 +47,13 @@ VitePress embeds walkthrough MP4s from the dedicated GitHub Release tag
 `docs-media` (binaries are **not** committed to git). Regenerate and publish:
 
 ```bash
-make e2e                    # regenerate docs walkthrough videos (desktop + demos)
-make update-video-documentation-desktop   # Tauri console tour only
+make update-video-documentation           # desktop suite + demo logins
+make update-video-documentation-desktop   # Tauri console suite only (VIDEO=1)
 make update-video-documentation-demos     # Playwright demo logins only
-make publish-docs-videos    # gh release upload → docs-media (requires gh auth)
+make publish-docs-videos                  # gh release upload → docs-media
 ```
 
-See [Walkthrough videos](/guide/walkthrough) and `docs/capture/README.md`.
+See [Walkthrough videos](/guide/walkthrough) and `tests/integration/README.md`.
 
 ## Building a release bundle
 

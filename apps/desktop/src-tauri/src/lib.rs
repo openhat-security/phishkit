@@ -640,8 +640,8 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init());
 
-    // WebdriverIO e2e only — keep production builds free of the test surface.
-    #[cfg(feature = "e2e")]
+    // WebdriverIO test hooks only — keep production builds free of the test surface.
+    #[cfg(feature = "test-hooks")]
     let builder = builder
         .plugin(tauri_plugin_wdio::init())
         .plugin(tauri_plugin_wdio_webdriver::init());

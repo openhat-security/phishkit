@@ -3,10 +3,10 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./App.css";
 
-// WebdriverIO guest bridge — only pulled into e2e-featured builds.
-if (import.meta.env.VITE_E2E === "1") {
+// WebdriverIO guest bridge — only pulled into test-hooks builds.
+if (import.meta.env.VITE_TEST_HOOKS === "1") {
   import("@wdio/tauri-plugin").catch(() => {
-    /* optional in non-e2e installs */
+    /* optional in production installs */
   });
 }
 

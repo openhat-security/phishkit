@@ -12,11 +12,17 @@
 
 | Surface | Languages |
 |---------|-----------|
-| **Product source** | **TypeScript** — `apps/desktop/src`, `demos/`, `docs/capture` · **Rust** — `crates/phishkit-core`, `apps/desktop/src-tauri`, `apps/cli` |
+| **Product source** | **TypeScript** — `apps/desktop/src`, `demos/`, `tests/integration` · **Rust** — `crates/phishkit-core`, `apps/desktop/src-tauri`, `apps/cli` |
 | **Scripts / kit glue** | **Python and shell OK** under `scripts/` and `kit/evilginx/scripts/` |
 | **Go** | Only vendored `vendor/evilginx2` and its build |
 
 Do not add Python (or other languages) inside app/UI/engine crates. Prefer Rust/TS when a script becomes a product feature (Tauri command / `phishkit` subcommand).
+
+## Tests
+
+- Rust: `make test` / `make test-unit`. Helpers live as `#[cfg(test)]` in `crates/phishkit-core/src/`; public-API tests live in `tests/unit/`.
+- Desktop UI: `make test-integration-docker` (Linux + Xvfb). Always sandbox `PHISHKIT_DATA` / `PHISHKIT_CONFIG`. Video is `VIDEO=1` only.
+- Do not add a `docs/capture/` or `e2e/` tree.
 
 ## Demos
 

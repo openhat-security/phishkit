@@ -13,7 +13,7 @@ See [authorized use](docs/guide/authorized-use.md).
 
 | Surface | Languages |
 |---------|-----------|
-| Product (`apps/`, `crates/`, `demos/`, `docs/capture`) | TypeScript + Rust |
+| Product (`apps/`, `crates/`, `demos/`, `tests/integration`) | TypeScript + Rust |
 | Automation (`scripts/`, `kit/evilginx/scripts/`) | Python + shell OK |
 | Vendored proxy | Go only in `vendor/evilginx2` |
 
@@ -32,13 +32,17 @@ Shared engine: [`crates/phishkit-core/`](crates/phishkit-core/). CLI:
 
 ```bash
 make setup          # rust toolchain check + desktop npm install + docs deps
-make check          # cargo fmt --check + cargo test (core + cli)
+make test           # cargo fmt --check + cargo test (core + cli)
 make lint           # cargo clippy (workspace packages)
+make test-integration-docker  # desktop UI suite (Docker + Xvfb; preferred)
 make cli            # release CLI binaries
 make desktop        # tauri dev
 ```
 
-`make help` lists the full target set.
+`make help` lists the full target set. Tests live under [`tests/`](tests/).
+Never run the desktop UI suite without `PHISHKIT_DATA` / `PHISHKIT_CONFIG`
+sandboxed — `make test-integration` and `make test-integration-docker` set
+those for you. See [Testing](docs/guide/testing.md).
 
 ## Docs
 

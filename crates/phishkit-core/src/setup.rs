@@ -12,20 +12,15 @@ const QUALIFIER: &str = "com";
 const ORGANIZATION: &str = "phishkit";
 const APPLICATION: &str = "phishkit";
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[serde(rename_all = "camelCase")]
 pub enum StorageMode {
+    #[default]
     Persistent,
     Ephemeral,
 }
 
-impl Default for StorageMode {
-    fn default() -> Self {
-        Self::Persistent
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[serde(rename_all = "camelCase")]
 pub enum Persona {
     #[serde(rename = "businessOwner")]
@@ -34,16 +29,11 @@ pub enum Persona {
     #[serde(rename = "penetrationTester")]
     PenetrationTester,
     #[serde(rename = "cybersecStudent")]
+    #[default]
     CybersecStudent,
 }
 
-impl Default for Persona {
-    fn default() -> Self {
-        Self::CybersecStudent
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct SetupConfig {
     pub setup_complete: bool,
@@ -55,20 +45,6 @@ pub struct SetupConfig {
     /// Optional kit root override (sources).
     pub kit_root_override: Option<String>,
     pub ephemeral_id: Option<String>,
-}
-
-impl Default for SetupConfig {
-    fn default() -> Self {
-        Self {
-            setup_complete: false,
-            persona: Persona::default(),
-            tutorial_completed: false,
-            storage_mode: StorageMode::default(),
-            custom_data_dir: None,
-            kit_root_override: None,
-            ephemeral_id: None,
-        }
-    }
 }
 
 fn project_dirs() -> AppResult<ProjectDirs> {
@@ -274,4 +250,28 @@ pub fn paths_info() -> AppResult<PathsInfo> {
         persona: cfg.persona,
         tutorial_completed: cfg.tutorial_completed,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::Mutex;
+
+    use once_cell::sync::Lazy;
+
+    static ENV_LOCK: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
+
+    #[test]
+    fn config_and_data_dir_honor_env() {
+        let _g = ENV_LOCK.lock().unwrap();
+        let tmp = tempfile::tempdir().unwrap();
+        let cfg = tmp.path().join("cfg");
+        let data = tmp.path().join("data");
+        std::env::set_var("PHISHKIT_CONFIG", &cfg);
+        std::env::set_var("PHISHKIT_DATA", &data);
+        assert_eq!(config_dir().unwrap(), cfg);
+        assert_eq!(data_dir().unwrap(), data);
+        std::env::remove_var("PHISHKIT_CONFIG");
+        std::env::remove_var("PHISHKIT_DATA");
+    }
 }
