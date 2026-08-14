@@ -16,6 +16,11 @@ starts the cookie-session demo on `:9080`, and runs the suite on Xvfb. Nothing
 appears on your host desktop. Data stays in the container
 (`PHISHKIT_CONFIG` / `PHISHKIT_DATA` under `/tmp/phishkit-test`).
 
+Give Docker Desktop at least 8 GB of RAM. The first image + Rust compile is
+slow; later runs reuse cache volumes. If `gtk` dies with SIGKILL, the VM ran
+out of memory — raise the Docker memory limit or keep `CARGO_BUILD_JOBS=2`
+(already set in compose).
+
 ## Host debug (opens a window)
 
 ```bash

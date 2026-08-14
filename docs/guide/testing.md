@@ -41,6 +41,10 @@ phishkit honors:
 the container. `make test-integration` creates a fresh temp directory on the
 host. **Do not run the WebdriverIO suite against your live assessment database.**
 
+Give Docker Desktop **at least 8 GB of RAM**. Compiling the Linux GTK/WebKit
+desktop binary is memory-heavy; a SIGKILL during `gtk` / `tauri` usually means
+the VM ran out of memory.
+
 Docker cannot run the macOS `.app`. The container builds the **Linux** Tauri
 binary and draws it on a virtual framebuffer (Xvfb). Recordings show GTK /
 WebKit chrome, not native macOS window chrome. That is the tradeoff for not

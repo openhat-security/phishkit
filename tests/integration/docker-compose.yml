@@ -11,6 +11,7 @@ services:
       PHISHKIT_TEST_BIN: /src/target/release/phishkit
       VIDEO: ${VIDEO:-}
       DISPLAY: ":99"
+      CARGO_BUILD_JOBS: "2"
     volumes:
       - ../..:/src
       - cargo-registry:/usr/local/cargo/registry
