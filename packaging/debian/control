@@ -1,10 +1,10 @@
 Source: phishkit
 Section: utils
 Priority: optional
-Maintainer: Irruptio Security <REPLACE_ME@example.com>
+Maintainer: Openhat Security <REPLACE_ME@example.com>
 Build-Depends: debhelper-compat (= 13), cargo, rustc, golang-go, pkg-config, libssl-dev
 Standards-Version: 4.6.2
-Homepage: https://github.com/irruptio-security/phishkit
+Homepage: https://github.com/openhat-security/phishkit
 Rules-Requires-Root: no
 
 Package: phishkit

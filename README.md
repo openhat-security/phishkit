@@ -5,10 +5,10 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/irruptio-security/phishkit/blob/main/LICENSE">
+  <a href="https://github.com/openhat-security/phishkit/blob/main/LICENSE">
     <img src="https://img.shields.io/badge/license-GPL--3.0-blue" alt="License: GPL-3.0" />
   </a>
-  <a href="https://irruptio-security.github.io/phishkit/">
+  <a href="https://openhat-security.github.io/phishkit/">
     <img src="https://img.shields.io/badge/docs-online-brightgreen" alt="Documentation" />
   </a>
 </p>
@@ -21,7 +21,7 @@ It is deep enough that expert operators keep full control, and guided enough tha
 a non-technical business user can run a safe click-through campaign out of the
 box.
 
-**[Read the documentation →](https://irruptio-security.github.io/phishkit/)**
+**[Read the documentation →](https://openhat-security.github.io/phishkit/)**
 
 > **For authorized security assessments only.** phishkit drives an AiTM proxy,
 > sends email, and handles captured credentials and live session tokens. Use it
@@ -78,7 +78,7 @@ phishkit is **pre-1.0** (`v0.1.0`) software; build it from source and run it
 locally. Use it only against domains and people you are authorized to assess.
 
 ```bash
-git clone --recurse-submodules https://github.com/irruptio-security/phishkit.git
+git clone --recurse-submodules https://github.com/openhat-security/phishkit.git
 cd phishkit
 make build          # ensure vendor sources, then build the evilginx binary
 make setup          # rust check + desktop deps + docs deps
@@ -143,7 +143,7 @@ use; requests to enable unauthorized use are out of scope.
 ## Documentation
 
 The full site is at
-**[irruptio-security.github.io/phishkit](https://irruptio-security.github.io/phishkit/)**.
+**[openhat-security.github.io/phishkit](https://openhat-security.github.io/phishkit/)**.
 
 - [What phishkit is](docs/guide/index.md)
 - [Authorized use](docs/guide/authorized-use.md)

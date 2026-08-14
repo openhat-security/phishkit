@@ -6,7 +6,7 @@ body:
     attributes:
       value: |
         Do **not** report security vulnerabilities here. Use a private
-        [GitHub Security Advisory](https://github.com/irruptio-security/phishkit/security/advisories/new)
+        [GitHub Security Advisory](https://github.com/openhat-security/phishkit/security/advisories/new)
         instead (see SECURITY.md). Never paste captured credentials, session
         cookies, tokens, recipient lists, or unredacted logs.
 

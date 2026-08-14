@@ -75,5 +75,5 @@ tests/
 Helper unit tests also live as `#[cfg(test)]` next to the functions in
 `crates/phishkit-core/src/`.
 
-See [`tests/README.md`](https://github.com/irruptio-security/phishkit/blob/main/tests/README.md)
+See [`tests/README.md`](https://github.com/openhat-security/phishkit/blob/main/tests/README.md)
 in the repository.

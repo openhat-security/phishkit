@@ -4,13 +4,13 @@
   "version": "0.1.0",
   "description": "phishkit — authorized adversary-in-the-middle (AiTM) + awareness assessment platform",
   "license": "GPL-3.0-only",
-  "homepage": "https://irruptio-security.github.io/phishkit/",
+  "homepage": "https://openhat-security.github.io/phishkit/",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/irruptio-security/phishkit.git"
+    "url": "git+https://github.com/openhat-security/phishkit.git"
   },
   "bugs": {
-    "url": "https://github.com/irruptio-security/phishkit/issues"
+    "url": "https://github.com/openhat-security/phishkit/issues"
   },
   "type": "module",
   "engines": {

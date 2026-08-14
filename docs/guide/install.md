@@ -7,7 +7,7 @@ phishkit is pre-1.0 alpha software. Build it from source and run it locally.
 - **git** (the project uses submodules under `vendor/`).
 - **Rust** stable, with `~/.cargo/bin` on your `PATH` (install via
   [rustup](https://rustup.rs)).
-- **Node.js** — see [`.nvmrc`](https://github.com/irruptio-security/phishkit/blob/main/.nvmrc)
+- **Node.js** — see [`.nvmrc`](https://github.com/openhat-security/phishkit/blob/main/.nvmrc)
   (Node 20+). `nvm use` picks it up.
 - **Go** toolchain — required once to build the bundled evilginx binary.
 - A **Tauri** toolchain for your OS (WebView + build tools). See the
@@ -18,7 +18,7 @@ phishkit is pre-1.0 alpha software. Build it from source and run it locally.
 Clone with submodules so `vendor/evilginx2` is populated:
 
 ```bash
-git clone --recurse-submodules https://github.com/irruptio-security/phishkit.git
+git clone --recurse-submodules https://github.com/openhat-security/phishkit.git
 cd phishkit
 ```
 

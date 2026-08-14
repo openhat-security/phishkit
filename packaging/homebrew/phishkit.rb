@@ -3,8 +3,8 @@
 # Placeholder Homebrew formula — publish to your tap after filling URLs/SHA.
 class Phishkit < Formula
   desc "Authorized AiTM + awareness assessment CLI"
-  homepage "https://github.com/irruptio-security/phishkit"
-  url "https://github.com/irruptio-security/phishkit/archive/refs/tags/v0.1.0.tar.gz"
+  homepage "https://github.com/openhat-security/phishkit"
+  url "https://github.com/openhat-security/phishkit/archive/refs/tags/v0.1.0.tar.gz"
   sha256 "REPLACE_ME"
   license "GPL-3.0-only"
 

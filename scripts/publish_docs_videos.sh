@@ -6,7 +6,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 VID_DIR="$ROOT/docs/media"
 TAG="docs-media"
-REPO="${GITHUB_REPOSITORY:-irruptio-security/phishkit}"
+REPO="${GITHUB_REPOSITORY:-openhat-security/phishkit}"
 
 if ! command -v gh >/dev/null 2>&1; then
   echo "gh CLI required: https://cli.github.com/" >&2

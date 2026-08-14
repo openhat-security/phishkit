@@ -66,4 +66,4 @@ and authorized engagement preparation** only.
 
 Software cannot make abuse impossible. Intended use, prohibited use, and
 operator responsibility are the project’s stance. See
-[SECURITY.md](https://github.com/irruptio-security/phishkit/blob/main/SECURITY.md).
+[SECURITY.md](https://github.com/openhat-security/phishkit/blob/main/SECURITY.md).

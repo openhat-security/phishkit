@@ -1,6 +1,6 @@
 import { defineConfig } from "vitepress";
 
-const repo = "https://github.com/irruptio-security/phishkit";
+const repo = "https://github.com/openhat-security/phishkit";
 
 export default defineConfig({
   title: "phishkit",
@@ -14,7 +14,7 @@ export default defineConfig({
   lastUpdated: true,
   ignoreDeadLinks: false,
   sitemap: {
-    hostname: "https://irruptio-security.github.io/phishkit/",
+    hostname: "https://openhat-security.github.io/phishkit/",
   },
   head: [
     ["meta", { name: "theme-color", content: "#dc2626" }],
@@ -118,7 +118,7 @@ export default defineConfig({
 
     footer: {
       message: "GPL-3.0. For authorized security assessments only.",
-      copyright: "© Irruptio Security",
+      copyright: "© Openhat Security",
     },
   },
 });

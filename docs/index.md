@@ -16,7 +16,7 @@ hero:
       link: /guide/authorized-use
     - theme: alt
       text: View on GitHub
-      link: https://github.com/irruptio-security/phishkit
+      link: https://github.com/openhat-security/phishkit
 
 features:
   - title: One end-to-end workflow

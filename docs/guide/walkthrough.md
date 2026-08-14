@@ -16,23 +16,23 @@ Full console tour: create an Assessment, Overview lifecycle, Templates,
 Recipients, Delivery presets, Campaigns (Guided / Composer / Express), Results,
 Targets → cookie-session demo, Recon & Proxy, Sessions filters, and Settings.
 
-<video controls playsinline preload="metadata" style="width:100%;max-width:960px;border-radius:8px;background:#0a0e15"><source src="https://github.com/irruptio-security/phishkit/releases/download/docs-media/walkthrough-assessment.mp4" type="video/mp4" /><source src="https://github.com/irruptio-security/phishkit/releases/download/docs-media/walkthrough-assessment.webm" type="video/webm" /></video>
+<video controls playsinline preload="metadata" style="width:100%;max-width:960px;border-radius:8px;background:#0a0e15"><source src="https://github.com/openhat-security/phishkit/releases/download/docs-media/walkthrough-assessment.mp4" type="video/mp4" /><source src="https://github.com/openhat-security/phishkit/releases/download/docs-media/walkthrough-assessment.webm" type="video/webm" /></video>
 
 ## Cookie-session demo login
 
 Cookie-session mock on `:9080` (`make demo-cookie`).
 
-<video controls playsinline preload="metadata" style="width:100%;max-width:960px;border-radius:8px;background:#0a0e15"><source src="https://github.com/irruptio-security/phishkit/releases/download/docs-media/walkthrough-demo-login.mp4" type="video/mp4" /><source src="https://github.com/irruptio-security/phishkit/releases/download/docs-media/walkthrough-demo-login.webm" type="video/webm" /></video>
+<video controls playsinline preload="metadata" style="width:100%;max-width:960px;border-radius:8px;background:#0a0e15"><source src="https://github.com/openhat-security/phishkit/releases/download/docs-media/walkthrough-demo-login.mp4" type="video/mp4" /><source src="https://github.com/openhat-security/phishkit/releases/download/docs-media/walkthrough-demo-login.webm" type="video/webm" /></video>
 
 ## Demo Firebase login
 
 Firebase-shaped mock on `:9081` (`make demo-firebase`).
 
-<video controls playsinline preload="metadata" style="width:100%;max-width:960px;border-radius:8px;background:#0a0e15"><source src="https://github.com/irruptio-security/phishkit/releases/download/docs-media/walkthrough-demo-firebase.mp4" type="video/mp4" /><source src="https://github.com/irruptio-security/phishkit/releases/download/docs-media/walkthrough-demo-firebase.webm" type="video/webm" /></video>
+<video controls playsinline preload="metadata" style="width:100%;max-width:960px;border-radius:8px;background:#0a0e15"><source src="https://github.com/openhat-security/phishkit/releases/download/docs-media/walkthrough-demo-firebase.mp4" type="video/mp4" /><source src="https://github.com/openhat-security/phishkit/releases/download/docs-media/walkthrough-demo-firebase.webm" type="video/webm" /></video>
 
 ::: tip Videos not loading?
 Media is published to the
-[`docs-media`](https://github.com/irruptio-security/phishkit/releases/tag/docs-media)
+[`docs-media`](https://github.com/openhat-security/phishkit/releases/tag/docs-media)
 GitHub Release (not committed to git). If a player is blank, regenerate and upload:
 
 ```bash

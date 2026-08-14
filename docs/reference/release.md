@@ -7,20 +7,20 @@ releases are handled today and the roadmap toward a signed stable release.
 
 phishkit follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 User-facing changes are recorded in
-[CHANGELOG.md](https://github.com/irruptio-security/phishkit/blob/main/CHANGELOG.md)
+[CHANGELOG.md](https://github.com/openhat-security/phishkit/blob/main/CHANGELOG.md)
 using the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format. The
 supported product is the desktop app; changes to the historical removed stacks are not tracked.
 
 ## Continuous integration
 
-Every push and pull request to `main`/`staging` runs [CI](https://github.com/irruptio-security/phishkit/blob/main/.github/workflows/ci.yml):
+Every push and pull request to `main`/`staging` runs [CI](https://github.com/openhat-security/phishkit/blob/main/.github/workflows/ci.yml):
 
 - **Rust** (workspace: `phishkit-core`, `phishkit-cli`, desktop): `cargo fmt --check`, `cargo clippy
   --all-targets -D warnings`, and `cargo test --all-targets`, on macOS and Linux.
 - **Frontend** (`apps/desktop`): `npm ci` + `npm run build`.
 - **Workflow lint**: `actionlint` over the workflow files.
 
-The [docs workflow](https://github.com/irruptio-security/phishkit/blob/main/.github/workflows/docs.yml)
+The [docs workflow](https://github.com/openhat-security/phishkit/blob/main/.github/workflows/docs.yml)
 builds the VitePress site and deploys it to GitHub Pages from `main`.
 
 ## Local quality gates

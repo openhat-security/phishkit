@@ -1,4 +1,5 @@
 use std::fs;
+#[cfg(target_os = "macos")]
 use std::process::Command;
 
 use serde::Serialize;
@@ -233,19 +234,19 @@ pub fn hosts_fix(dryrun_domain: String, phishlet: Option<String>) -> AppResult<s
         return Ok(serde_json::json!({"ok": true, "already": true, "hosts_ok": true}));
     }
     let missing = status.missing_lines;
-    let mut parts = Vec::new();
-    for line in &missing {
-        let fqdn = line.split_whitespace().last().unwrap_or("");
-        parts.push(format!(
-            "grep -E '(^|[[:space:]]){}([[:space:]]|$)' /etc/hosts >/dev/null || printf '%s\\n' '{}' >> /etc/hosts",
-            fqdn.replace('.', r"\."),
-            line.replace('\'', r"'\''")
-        ));
-    }
-    let shell_cmd = parts.join(" && ");
 
     #[cfg(target_os = "macos")]
     {
+        let mut parts = Vec::new();
+        for line in &missing {
+            let fqdn = line.split_whitespace().last().unwrap_or("");
+            parts.push(format!(
+                "grep -E '(^|[[:space:]]){}([[:space:]]|$)' /etc/hosts >/dev/null || printf '%s\\n' '{}' >> /etc/hosts",
+                fqdn.replace('.', r"\."),
+                line.replace('\'', r"'\''")
+            ));
+        }
+        let shell_cmd = parts.join(" && ");
         let script = format!(
             "do shell script {} with administrator privileges",
             serde_json::to_string(&shell_cmd).unwrap()

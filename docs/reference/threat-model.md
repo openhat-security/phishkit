@@ -71,5 +71,5 @@ guardrails end. Read it before relying on phishkit for an engagement.
 
 Weaknesses in the authorized-use gate, allow-listed replay, or data-handling
 guardrails are in scope and welcome. Report them privately per
-[SECURITY.md](https://github.com/irruptio-security/phishkit/blob/main/SECURITY.md),
+[SECURITY.md](https://github.com/openhat-security/phishkit/blob/main/SECURITY.md),
 not in a public issue.

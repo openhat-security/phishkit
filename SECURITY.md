@@ -14,7 +14,7 @@ software and must not be relied on for high-risk activity.
 ## Reporting a vulnerability
 
 Do not open a public issue for vulnerabilities. Use the repository's private
-[GitHub Security Advisory](https://github.com/irruptio-security/phishkit/security/advisories/new)
+[GitHub Security Advisory](https://github.com/openhat-security/phishkit/security/advisories/new)
 form and include:
 
 - the affected version and operating system;
