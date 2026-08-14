@@ -1,4 +1,4 @@
-# Packaging (pre-alpha)
+# Packaging (alpha)
 
 Stubs for distribution channels. The [Release workflow](../.github/workflows/release.yml)
 builds CLI archives on `v*` tags and attaches refreshed Homebrew / AUR / Debian
@@ -6,7 +6,7 @@ files to the GitHub Release.
 
 ## Channels
 
-| Channel | Path | Pre-alpha behavior |
+| Channel | Path | Alpha behavior |
 |---------|------|--------------------|
 | GitHub Releases | workflow artifacts | Primary — CLI `.tar.gz` + sha256 |
 | Homebrew | [`homebrew/phishkit.rb`](homebrew/phishkit.rb) | Formula attached; fill `sha256` after tag archive exists; push to your tap when ready |

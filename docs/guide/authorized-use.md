@@ -1,5 +1,10 @@
 # Authorized use
 
+::: warning Alpha
+`v0.1.0` is a primitive alpha — not a beta and not production. Build from
+source. Do not treat this as a supported installer or a finished product.
+:::
+
 phishkit is built for security assessments conducted with **explicit written
 authorization** from the owner of the targeted systems and people. Using it
 without authorization may be a crime. If you cannot produce written

@@ -1,7 +1,8 @@
 # Release process
 
-phishkit is pre-1.0 (v0.1.x) software. This page describes how versions and
-releases are handled today and the roadmap toward a signed stable release.
+phishkit is **alpha** (`v0.1.x`). This is not a beta and not a production
+product. This page describes how versions are tagged today and the long road
+toward a signed stable release.
 
 ## Versioning
 
@@ -41,19 +42,11 @@ make test-integration-docker   # Linux + Xvfb; no host windows or app-data
 
 See [Testing](/guide/testing).
 
-## Docs walkthrough videos
+## Walkthrough recordings
 
-VitePress embeds walkthrough MP4s from the dedicated GitHub Release tag
-`docs-media` (binaries are **not** committed to git). Regenerate and publish:
-
-```bash
-make update-video-documentation           # desktop suite + demo logins
-make update-video-documentation-desktop   # Tauri console suite only (VIDEO=1)
-make update-video-documentation-demos     # Playwright demo logins only
-make publish-docs-videos                  # gh release upload → docs-media
-```
-
-See [Walkthrough videos](/guide/walkthrough) and `tests/integration/README.md`.
+Do **not** upload MP4s to GitHub Releases. They get large and burn bandwidth.
+Generate locally (`VIDEO=1` / `make update-video-documentation`); artifacts stay
+gitignored. See [Walkthrough](/guide/walkthrough).
 
 ## Building a release bundle
 

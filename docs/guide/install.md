@@ -1,6 +1,12 @@
 # Install
 
-phishkit is pre-1.0 alpha software. Build it from source and run it locally.
+::: warning Alpha — not a production product
+`v0.1.0` is a **primitive alpha**. It is not a beta. There is no signed
+installer, no support SLA, and no promise of stability. Build from source and
+run it only in a lab or authorized engagement you control.
+:::
+
+phishkit is pre-1.0 **alpha** software. Build it from source and run it locally.
 
 ## Prerequisites
 

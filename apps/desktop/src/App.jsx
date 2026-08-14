@@ -878,7 +878,7 @@ return (
           </span>
           <span className="name">
             <b>phish</b>kit
-            <small>AiTM console</small>
+            <small>alpha · AiTM console</small>
           </span>
         </div>
         {renderContext()}
@@ -894,6 +894,7 @@ return (
           >
             Demo tour
           </button>
+          <div>Alpha — not production</div>
           <div>Authorized assessments only</div>
           <div className="mono">{kit?.root || "locating kit…"}</div>
         </div>

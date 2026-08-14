@@ -11,6 +11,9 @@
   <a href="https://openhat-security.github.io/phishkit/">
     <img src="https://img.shields.io/badge/docs-online-brightgreen" alt="Documentation" />
   </a>
+  <a href="https://github.com/openhat-security/phishkit/releases/tag/v0.1.0">
+    <img src="https://img.shields.io/badge/status-alpha-orange" alt="Alpha" />
+  </a>
 </p>
 
 phishkit is a local desktop app that wraps [evilginx](https://github.com/kgretzky/evilginx2)
@@ -22,6 +25,10 @@ a non-technical business user can run a safe click-through campaign out of the
 box.
 
 **[Read the documentation →](https://openhat-security.github.io/phishkit/)**
+
+> **Alpha (`v0.1.0`).** This is a primitive, in-progress release — not a beta
+> and not a production product. Expect breaking changes. Build from source.
+> There is no signed installer.
 
 > **For authorized security assessments only.** phishkit drives an AiTM proxy,
 > sends email, and handles captured credentials and live session tokens. Use it
@@ -74,8 +81,9 @@ box.
 
 ## Install
 
-phishkit is **pre-1.0** (`v0.1.0`) software; build it from source and run it
-locally. Use it only against domains and people you are authorized to assess.
+phishkit is **alpha** (`v0.1.0`) — not beta, not production. Build it from
+source and run it locally. Use it only against domains and people you are
+authorized to assess.
 
 ```bash
 git clone --recurse-submodules https://github.com/openhat-security/phishkit.git
@@ -150,7 +158,7 @@ The full site is at
 - [Install](docs/guide/install.md)
 - [Quick start](docs/guide/quick-start.md)
 - [Testing](docs/guide/testing.md)
-- [Walkthrough videos](docs/guide/walkthrough.md)
+- [Walkthrough](docs/guide/walkthrough.md)
 - [Campaign guide](docs/guide/campaigns.md)
 - [Phishlet authoring](docs/guide/phishlets.md)
 - [Command line](docs/guide/cli.md)

@@ -22,9 +22,8 @@ Test credentials: `demo@phishkit.local` / `demo-password`. Copy-ready Target
 notes live under `demos/cookie/` and `demos/firebase/` in the
 repo. See also `demos/README.md`.
 
-Prefer the in-app **Demo tour** (sidebar) or the [walkthrough videos](/guide/walkthrough)
-first — they cover
-the desktop Assessment flow and both localhost demos.
+Prefer the in-app **Demo tour** (sidebar) or the [text walkthrough](/guide/walkthrough)
+first — they cover the desktop Assessment flow and both localhost demos.
 
 ## 1. Launch the app
 

@@ -19,7 +19,7 @@ systems or mailboxes you are not authorized to assess. See
 | `make test-integration` | Same suite on the host | Window yes; app-data **no** (temp sandbox) |
 | `VIDEO=1 make test-integration` | Same, plus MP4 artifacts | Window yes |
 | `make test-destinations` | Destinations lure + Playwright | Needs `TEST_EMAIL` / `TEST_PASSWORD` |
-| `make update-video-documentation` | Remux recordings into `docs/media/` | See [walkthrough videos](/guide/walkthrough) |
+| `make update-video-documentation` | Remux recordings into `docs/media/` (local only) | See [walkthrough](/guide/walkthrough) |
 
 `make check` is an alias of `make test-unit` (CI still calls `make check`).
 

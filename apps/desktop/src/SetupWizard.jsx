@@ -54,6 +54,7 @@ export default function SetupWizard({ onComplete, append }) {
           <>
             <h1>Welcome</h1>
             <p className="muted">
+              This is a primitive <strong>alpha</strong> — not a beta and not a production product.
               Authorized AiTM and awareness assessments only. You will choose how data is stored,
               who you are in the product, and whether to take a short tutorial.
             </p>

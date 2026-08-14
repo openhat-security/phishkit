@@ -4,6 +4,10 @@ phishkit is GPL-3.0 software. By contributing, you agree that your contribution
 is distributed under GPL-3.0. Participation is governed by our
 [Code of Conduct](CODE_OF_CONDUCT.md).
 
+This repository is a **primitive alpha** (`v0.1.x`) — not a beta and not a
+production product. Do not commit walkthrough videos or upload them to GitHub
+Releases; generate MP4s locally if you need them.
+
 phishkit is an **authorized-assessment** tool. Do not contribute features,
 presets, phishlets, or documentation whose primary purpose is to enable
 unauthorized use, evade lawful detection, or remove the authorized-use gate.

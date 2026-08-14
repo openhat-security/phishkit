@@ -38,7 +38,8 @@ VIDEO=1 make test-integration
 make update-video-documentation-desktop
 ```
 
-Artifacts: `tests/integration/artifacts/` (gitignored).
+Artifacts: `tests/integration/artifacts/` (gitignored). Do not upload MP4s to
+GitHub — they get large. The docs site uses a text walkthrough instead.
 
 ## Specs
 

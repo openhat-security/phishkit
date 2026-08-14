@@ -56,11 +56,10 @@ help:
 	@echo "  make docs                    # VitePress docs preview (hot reload)"
 	@echo "  make docs-build              # build docs; fails on unresolved internal links"
 	@echo ""
-	@echo "Docs walkthrough videos (opt-in VIDEO=1 on the integration suite):"
-	@echo "  make update-video-documentation          # desktop tour + demo logins"
+	@echo "Local walkthrough recordings (gitignored; do not upload to GitHub):"
+	@echo "  make update-video-documentation          # desktop tour + demo logins → docs/media/"
 	@echo "  make update-video-documentation-desktop  # WebdriverIO Tauri console tour"
 	@echo "  make update-video-documentation-demos    # Playwright demo-cookie / demo-firebase"
-	@echo "  make publish-docs-videos                 # upload walkthrough-*.mp4 → Release docs-media"
 	@echo "  TEST_EMAIL=… TEST_PASSWORD=… make test-destinations   # lure + evilginx (mailbox)"
 	@echo "  # optional: TEST_TARGET=demo-cookie.local.phishkit TEST_HEADED=1 TEST_KEEP_PROXY=1"
 	@echo ""
@@ -253,10 +252,7 @@ test-integration-docker:
 	docker compose -f tests/integration/docker-compose.yml up --build --abort-on-container-exit --exit-code-from integration
 
 # -----------------------------------------------------------------------------
-# Docs walkthrough videos (gitignored under docs/media/)
-# -----------------------------------------------------------------------------
-# Pieces: update-video-documentation-desktop | update-video-documentation-demos
-# Publish: make publish-docs-videos  → GitHub Release tag docs-media
+# Local walkthrough recordings (gitignored under docs/media/). Do not upload.
 
 # Desktop console tour: same suite as test-integration with VIDEO=1, then remux.
 update-video-documentation-desktop:
@@ -295,6 +291,7 @@ update-video-documentation-demos:
 # Full docs media suite: desktop tour + demo logins.
 update-video-documentation: update-video-documentation-desktop update-video-documentation-demos
 
+# Kept so old docs fail loudly instead of uploading MP4s to GitHub.
 publish-docs-videos:
 	@chmod +x scripts/publish_docs_videos.sh
 	@./scripts/publish_docs_videos.sh

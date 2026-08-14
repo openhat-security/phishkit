@@ -6,7 +6,7 @@ titleTemplate: false
 hero:
   name: phishkit
   text: Authorized phishing assessments, end to end
-  tagline: evilginx AiTM plus a native email campaign engine in one local desktop app — deep enough for operators, guided enough for a business user.
+  tagline: Alpha software. Authorized AiTM plus a native email campaign engine in one local desktop app — not a beta, not production. Build from source.
   actions:
     - theme: brand
       text: Quick start
@@ -28,6 +28,13 @@ features:
   - title: Dual audience
     details: A guided wizard and curated presets with safe defaults for business users, layered over full Advanced controls for expert operators.
 ---
+
+## This is an alpha
+
+`v0.1.0` is a **primitive alpha**: we are assembling and testing the product.
+It is not a beta and not a production release. Expect breaking changes, missing
+polish, unsigned builds, and gaps in the integration suite. Build from source.
+Do not treat a GitHub tag as a supported installer channel.
 
 ## For authorized assessments only
 

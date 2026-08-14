@@ -7,8 +7,8 @@ Operator and maintainer automation. **Python and shell are intentional here**
 |--------|---------|
 | `sync_community_phishlets.py` | Refresh `vendor/community-phishlets/` from lockfile pins |
 | `ensure_vendors.sh` | Init/update `vendor/evilginx2` submodule |
-| `destinations_test.py` / `demo_videos.py` | Optional Destinations / docs video helpers |
-| `publish_docs_videos.sh` | Upload walkthrough media to the `docs-media` release |
+| `destinations_test.py` / `demo_videos.py` | Optional Destinations / local video helpers |
+| `publish_docs_videos.sh` | Disabled — do not upload MP4s to GitHub |
 
 Campaigns and captures: use `phishkit wiz` / `list-captures` / `delete-capture`
 (or `make session-list` / `make session-delete`).

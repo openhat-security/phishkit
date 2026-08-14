@@ -64,7 +64,7 @@ export default defineConfig({
             { text: "Authorized use", link: "/guide/authorized-use" },
             { text: "Install", link: "/guide/install" },
             { text: "Quick start", link: "/guide/quick-start" },
-            { text: "Walkthrough videos", link: "/guide/walkthrough" },
+            { text: "Walkthrough", link: "/guide/walkthrough" },
             { text: "Testing", link: "/guide/testing" },
           ],
         },

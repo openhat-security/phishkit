@@ -59,7 +59,7 @@ export const DEMO_TOUR_STEPS = [
   {
     id: "welcome",
     title: "Welcome to phishkit",
-    body: "You will create an Assessment, add a Target, open the proxy, then review Sessions. Authorized use only.",
+    body: "This is an alpha preview. You will create an Assessment, add a Target, open the proxy, then review Sessions. Authorized use only.",
     spotlight: '[data-testid="nav-assessments"]',
     mode: "home",
     nav: "assessments",

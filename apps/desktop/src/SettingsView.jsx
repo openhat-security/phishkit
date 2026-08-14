@@ -67,6 +67,9 @@ export default function SettingsView({ append, onStartTutorial, onSetupChanged }
           Settings
           <Hint hint="Durable preferences live in the OS config directory. Assessment data lives in the OS data directory (or an ephemeral sandbox)." />
         </h2>
+        <p className="muted small">
+          Version 0.1.0 <strong>alpha</strong> — primitive preview, not a beta, not production.
+        </p>
         <div className="settings-grid">
           <div>
             <strong>Storage mode</strong>

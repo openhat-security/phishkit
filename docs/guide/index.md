@@ -1,5 +1,11 @@
 # What phishkit is
 
+::: warning Alpha
+This is a **primitive alpha** (`v0.1.0`), not a beta and not production. We are
+still putting the product together. Build from source, expect breakage, and
+read [authorized use](/guide/authorized-use) before you run anything.
+:::
+
 phishkit is a desktop application for running **authorized** phishing
 assessments end to end. It wraps [evilginx](https://github.com/kgretzky/evilginx2)
 (an adversary-in-the-middle, or AiTM, proxy) together with a native email

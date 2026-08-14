@@ -6,9 +6,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [0.1.0] - 2026-08-14
 
-First tagged release. Adds an isolated test harness so contributors can run
-quality gates without touching a live operator database or stealing the
-desktop.
+**Alpha.** First tagged cut — primitive, not a beta, not production. We are
+still assembling the product. Adds an isolated test harness so contributors can
+run quality gates without touching a live operator database or stealing the
+desktop. Walkthrough MP4s are generated locally only; they are not uploaded to
+GitHub.
 
 ### Added
 
@@ -27,12 +29,13 @@ desktop.
 
 ### Notes
 
+- Alpha: expect breaking changes; build from source; unsigned binaries
 - UI suite is not on the PR critical path yet; `make test` / CI remain the gate
-- Docker recordings show Linux GTK chrome, not native macOS
+- Do not publish walkthrough videos to GitHub Releases
 
 ## [0.0.1] - 2026-08-09
 
-Initial **pre-alpha** public preview (before beta). Source-first, unsigned builds.
+Initial public preview (before the 0.1.0 alpha tag). Source-first, unsigned builds.
 For authorized security assessments only — see [authorized use](docs/guide/authorized-use.md).
 
 ### Added
