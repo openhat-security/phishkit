@@ -94,9 +94,18 @@ make start          # run the supported desktop app (tauri dev)
 ```
 
 Requires git, Rust stable (`~/.cargo/bin` on `PATH`), Node (see `.nvmrc`), the Go
-toolchain (to build evilginx once), and the Tauri prerequisites for your OS. Full
-instructions, including platform support, are in the
+toolchain (to build evilginx once), and the Tauri prerequisites for your OS. The
+AiTM lure also needs `screen` and Python `pexpect`, which `make setup` installs
+into a managed `venv/`. Full instructions, including platform support, are in the
 [install guide](docs/guide/install.md).
+
+To run the bundled AiTM capture end to end against the cookie demo, follow
+[AiTM demo end to end](docs/guide/walkthrough.md#aitm-demo-end-to-end). A quick
+unprivileged check of the capture surface:
+
+```bash
+make test-aitm      # stands up the HTTPS upstream and drives the cookie login flow
+```
 
 The supported product is the desktop app under [`apps/desktop/`](apps/desktop/)
 with the AiTM kit under [`kit/evilginx/`](kit/evilginx/).

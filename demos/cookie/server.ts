@@ -1,8 +1,15 @@
 /**
  * Cookie-session practice app for local phishkit dry-runs.
  * http://127.0.0.1:9080 — creds: demo@phishkit.local / demo-password
+ *
+ * Set TLS_CERT and TLS_KEY to serve HTTPS instead of HTTP. This is how the
+ * app becomes a reachable HTTPS *upstream* on a host distinct from the lure
+ * (app.cookie-demo.test), so evilginx can proxy and capture a session end to
+ * end. See `make demo-cookie-tls`.
  */
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { createServer as createHttpsServer } from "node:https";
+import { readFileSync } from "node:fs";
 import { createHmac, randomBytes } from "node:crypto";
 import { parse as parseQuery } from "node:querystring";
 
@@ -110,7 +117,11 @@ function readBody(req: IncomingMessage): Promise<string> {
   });
 }
 
-const server = createServer(async (req, res) => {
+const TLS_CERT = process.env.TLS_CERT ?? "";
+const TLS_KEY = process.env.TLS_KEY ?? "";
+const useTls = TLS_CERT !== "" && TLS_KEY !== "";
+
+const handler = async (req: IncomingMessage, res: ServerResponse) => {
   const url = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`);
   const path = url.pathname;
   console.log(`[demo-cookie] ${req.socket.remoteAddress} ${req.method} ${path}`);
@@ -177,10 +188,19 @@ const server = createServer(async (req, res) => {
   }
 
   send(res, 404, "not found\n", "text/plain; charset=utf-8");
-});
+};
 
+const server = useTls
+  ? createHttpsServer(
+      { cert: readFileSync(TLS_CERT), key: readFileSync(TLS_KEY) },
+      handler,
+    )
+  : createServer(handler);
+
+const scheme = useTls ? "https" : "http";
 server.listen(PORT, HOST, () => {
-  console.log(`demo-cookie listening on http://${HOST}:${PORT}`);
-  console.log(`  login:  http://${HOST}:${PORT}/login`);
+  console.log(`demo-cookie listening on ${scheme}://${HOST}:${PORT}`);
+  console.log(`  login:  ${scheme}://${HOST}:${PORT}/login`);
   console.log(`  creds:  ${DEMO_USER} / ${DEMO_PASS}`);
+  if (useTls) console.log(`  (TLS upstream — evilginx proxies the lure host here)`);
 });

