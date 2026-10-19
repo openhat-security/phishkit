@@ -234,6 +234,8 @@ fn quickstart() -> AppResult<serde_json::Value> {
             api_key: None,
             region: None,
             domain: None,
+            smtp_security: None,
+            accept_invalid_certs: None,
             activate: Some(true),
         };
         if provider.eq_ignore_ascii_case("smtp") {
