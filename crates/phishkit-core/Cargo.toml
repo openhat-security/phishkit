@@ -1,6 +1,6 @@
 [package]
 name = "phishkit-core"
-version = "0.1.0"
+version = "0.1.1-alpha.1"
 description = "phishkit shared engine (DB, assessments, mail, evilginx control)"
 edition = "2021"
 license = "GPL-3.0-only"

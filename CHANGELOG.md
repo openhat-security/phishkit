@@ -6,6 +6,8 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.1-alpha.1] - 2026-10-19
+
 ### Fixed
 
 - AiTM cookie demo now runs end to end. The `demo-cookie` phishlet proxies to a
@@ -22,6 +24,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `upstream_domain` handles single-label internal hosts and compound public
   suffixes (`co.uk`, `github.io`, and similar) instead of always stripping the
   left label.
+
+- SMTP passwords and API keys are sealed at rest (ChaCha20-Poly1305 under a
+  local `master.key`), not left as plaintext in SQLite.
+- The SQLite store and its data directory are forced to `0600` / `0700` on every
+  open, including after a loose restore.
+- Recon/`detect` verifies TLS by default and refuses loopback, RFC1918,
+  link-local, CGNAT, and ULA targets unless `PHISHKIT_RECON_ALLOW_PRIVATE=1`.
+- The delivery-test send path goes through the same AUP gate as campaign sends.
+- Lab SMTP can speak cleartext (`smtp_security=plain`) or accept a private/self-
+  signed relay cert (`accept_invalid_certs`), plus optional `PHISHKIT_SMTP_CA_FILE`.
 
 ### Added
 
