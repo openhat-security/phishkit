@@ -56,5 +56,9 @@ name = "secret_store"
 path = "../../tests/unit/secret_store.rs"
 
 [[test]]
+name = "lab_smtp"
+path = "../../tests/unit/lab_smtp.rs"
+
+[[test]]
 name = "phishlet"
 path = "../../tests/unit/phishlet.rs"
