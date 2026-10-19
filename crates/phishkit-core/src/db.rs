@@ -576,8 +576,38 @@ fn migrate(conn: &Connection) -> AppResult<()> {
                 "domain",
                 "ALTER TABLE smtp_settings ADD COLUMN domain TEXT NOT NULL DEFAULT ''",
             ),
+            (
+                "smtp_security",
+                "ALTER TABLE smtp_settings ADD COLUMN smtp_security TEXT NOT NULL DEFAULT ''",
+            ),
+            (
+                "accept_invalid_certs",
+                "ALTER TABLE smtp_settings ADD COLUMN accept_invalid_certs INTEGER NOT NULL DEFAULT 0",
+            ),
         ] {
             if !smtp_cols.iter().any(|c| c == col) {
+                let _ = conn.execute(ddl, []);
+            }
+        }
+    }
+    // Lab SMTP TLS options on mail_accounts (H5)
+    let acct_cols: Vec<String> = {
+        let mut stmt = conn.prepare("PRAGMA table_info(mail_accounts)")?;
+        let rows = stmt.query_map([], |r| r.get::<_, String>(1))?;
+        rows.filter_map(|r| r.ok()).collect()
+    };
+    if !acct_cols.is_empty() {
+        for (col, ddl) in [
+            (
+                "smtp_security",
+                "ALTER TABLE mail_accounts ADD COLUMN smtp_security TEXT NOT NULL DEFAULT ''",
+            ),
+            (
+                "accept_invalid_certs",
+                "ALTER TABLE mail_accounts ADD COLUMN accept_invalid_certs INTEGER NOT NULL DEFAULT 0",
+            ),
+        ] {
+            if !acct_cols.iter().any(|c| c == col) {
                 let _ = conn.execute(ddl, []);
             }
         }
