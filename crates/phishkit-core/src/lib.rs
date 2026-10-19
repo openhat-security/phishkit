@@ -21,6 +21,7 @@ pub mod phishlet;
 pub mod providers;
 pub mod readiness;
 pub mod recon;
+pub mod secret_store;
 pub mod services;
 pub mod sessions;
 pub mod setup;
