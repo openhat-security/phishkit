@@ -156,9 +156,14 @@ pub fn start_with_lure(
     }
 
     if !out.status.success() && lure.is_empty() {
+        // Tear down any detached screen session / half-bound port the failed start
+        // left behind, so a retry starts clean (audit L1).
+        let _ = stop_evilginx();
         return Err(AppError::msg(format!(
             "evilginx start failed:\n{combined}\n\
-             Tip: port 443 may need privileges; check Advanced → Tail evilginx log."
+             Tip: privileged ports (:443/:53) need root/setcap, or set \
+             EVILGINX_HTTPS_PORT/EVILGINX_DNS_PORT to high ports; see the evilginx log \
+             (screen -r phishkit-evilginx)."
         )));
     }
 
