@@ -5,6 +5,7 @@ use phishkit_core::assessment::{create_assessment, CreateAssessment};
 use phishkit_core::mail::{
     create_recipient_list, import_recipients_csv, list_recipients, recipient_vars, Recipient,
 };
+use phishkit_core::{aup, mail};
 use support::isolate_storage;
 
 #[test]
@@ -47,4 +48,33 @@ fn import_plain_emails_and_recipient_vars() {
     assert_eq!(vars.get("first_name").unwrap(), "Alice");
     assert_eq!(vars.get("link").unwrap(), "https://lure.test/x");
     assert_eq!(vars.get("role").unwrap(), "lead");
+}
+
+#[test]
+fn send_test_is_blocked_until_aup_accepted() {
+    let (_tmp, _env) = isolate_storage();
+
+    // Before the operator accepts the AUP, the "test" send must be refused by the
+    // same gate as the production send paths (H4) — regardless of mail config.
+    let err = mail::send_test("ops@example.test".into()).expect_err("send-test must be gated");
+    let msg = err.to_string();
+    assert!(
+        msg.to_lowercase().contains("acknowledgment"),
+        "expected AUP gate error, got: {msg}"
+    );
+
+    // After accepting, the gate no longer blocks; the send proceeds and only fails
+    // downstream because no SMTP host is configured in this isolated test.
+    aup::accept_aup().expect("accept aup");
+    let err2 =
+        mail::send_test("ops@example.test".into()).expect_err("no SMTP host configured in test");
+    let msg2 = err2.to_string();
+    assert!(
+        !msg2.to_lowercase().contains("acknowledgment"),
+        "AUP gate should no longer block after acceptance, got: {msg2}"
+    );
+    assert!(
+        msg2.contains("SMTP host is required"),
+        "expected downstream SMTP error after gate passed, got: {msg2}"
+    );
 }

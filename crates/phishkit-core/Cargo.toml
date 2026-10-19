@@ -40,6 +40,10 @@ name = "mail"
 path = "../../tests/unit/mail.rs"
 
 [[test]]
+name = "db_perms"
+path = "../../tests/unit/db_perms.rs"
+
+[[test]]
 name = "recon"
 path = "../../tests/unit/recon.rs"
 

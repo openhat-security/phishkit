@@ -1,5 +1,5 @@
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
 use chrono::Utc;
@@ -56,9 +56,63 @@ fn db_path() -> AppResult<PathBuf> {
 
 fn connect() -> AppResult<Connection> {
     let path = db_path()?;
-    let conn = Connection::open(path)?;
+    // This store holds captured credentials, session cookies, recipient PII, and the
+    // SMTP password. Make sure neither the data dir nor the DB file (nor any SQLite
+    // sidecar files) are readable by other local users, on first open and every open
+    // after (e.g. a DB restored from a backup with loose permissions). See H2.
+    harden_storage(&path)?;
+    let conn = Connection::open(&path)?;
     conn.execute_batch("PRAGMA foreign_keys = ON;")?;
+    harden_storage(&path)?;
     Ok(conn)
+}
+
+/// Restrict permissions on the SQLite store and its directory so captured secrets
+/// are not world/group readable. On unix: data dir -> 0700, DB + sidecar files ->
+/// 0600. The DB file is pre-created 0600 when absent so SQLite never gets a chance
+/// to create it world-readable. No-op on non-unix targets (NTFS/APFS ACLs differ).
+fn harden_storage(path: &Path) -> AppResult<()> {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
+
+        if let Some(parent) = path.parent() {
+            if parent.is_dir() {
+                let _ = fs::set_permissions(parent, fs::Permissions::from_mode(0o700));
+            }
+        }
+
+        if !path.exists() {
+            match fs::OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .mode(0o600)
+                .open(path)
+            {
+                Ok(_) => {}
+                Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {}
+                Err(e) => return Err(e.into()),
+            }
+        }
+
+        for suffix in ["", "-wal", "-shm", "-journal"] {
+            let p = if suffix.is_empty() {
+                path.to_path_buf()
+            } else {
+                let mut os = path.as_os_str().to_owned();
+                os.push(suffix);
+                PathBuf::from(os)
+            };
+            if p.exists() {
+                let _ = fs::set_permissions(&p, fs::Permissions::from_mode(0o600));
+            }
+        }
+    }
+    #[cfg(not(unix))]
+    {
+        let _ = path;
+    }
+    Ok(())
 }
 
 fn slug(name: &str) -> String {
@@ -978,4 +1032,51 @@ pub fn prune_empty_captures(profile_id: &str) -> AppResult<usize> {
         }
         Ok(n)
     })
+}
+
+#[cfg(all(test, unix))]
+mod perm_tests {
+    use super::*;
+    use std::os::unix::fs::PermissionsExt;
+
+    fn mode(p: &Path) -> u32 {
+        fs::metadata(p).unwrap().permissions().mode() & 0o777
+    }
+
+    #[test]
+    fn harden_storage_creates_db_0600_and_dir_0700() {
+        let tmp = tempfile::tempdir().unwrap();
+        let dir = tmp.path().join("data");
+        fs::create_dir_all(&dir).unwrap();
+        // Loosen the dir first to prove harden_storage tightens it.
+        fs::set_permissions(&dir, fs::Permissions::from_mode(0o755)).unwrap();
+        let db = dir.join("phishkit.db");
+
+        harden_storage(&db).unwrap();
+
+        assert!(db.exists(), "db file should be pre-created");
+        assert_eq!(mode(&db), 0o600, "db must be 0600");
+        assert_eq!(mode(&dir), 0o700, "data dir must be 0700");
+    }
+
+    #[test]
+    fn harden_storage_tightens_existing_loose_files() {
+        let tmp = tempfile::tempdir().unwrap();
+        let dir = tmp.path().join("data");
+        fs::create_dir_all(&dir).unwrap();
+        let db = dir.join("phishkit.db");
+        // Simulate a world-readable DB + sidecar (e.g. restored from a backup).
+        fs::write(&db, b"not really a db").unwrap();
+        fs::set_permissions(&db, fs::Permissions::from_mode(0o644)).unwrap();
+        let wal = dir.join("phishkit.db-wal");
+        fs::write(&wal, b"wal").unwrap();
+        fs::set_permissions(&wal, fs::Permissions::from_mode(0o644)).unwrap();
+        fs::set_permissions(&dir, fs::Permissions::from_mode(0o755)).unwrap();
+
+        harden_storage(&db).unwrap();
+
+        assert_eq!(mode(&db), 0o600, "existing db must be tightened to 0600");
+        assert_eq!(mode(&wal), 0o600, "sidecar -wal must be tightened to 0600");
+        assert_eq!(mode(&dir), 0o700, "data dir must be tightened to 0700");
+    }
 }
