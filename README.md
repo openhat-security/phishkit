@@ -1,7 +1,7 @@
 <h1 align="center">phishkit</h1>
 
 <p align="center">
-  <b>An authorized adversary-in-the-middle (AiTM) + awareness assessment platform.</b>
+  <b>An authorized adversary-in-the-middle (AiTM) and awareness assessment platform.</b>
 </p>
 
 <p align="center">
@@ -16,53 +16,132 @@
   </a>
 </p>
 
-phishkit is a local desktop app that wraps [evilginx](https://github.com/kgretzky/evilginx2)
-(an AiTM proxy) together with a native email campaign engine into one
-**authorized** end-to-end phishing workflow: **Assessment → Target →
-Phishlet/Proxy → Lure → Template → Recipients → Campaign → Results → Session**.
-It is deep enough that expert operators keep full control, and guided enough that
-a non-technical business user can run a safe click-through campaign out of the
-box.
+phishkit is a local desktop app that wraps [evilginx](https://github.com/kgretzky/evilginx2),
+an AiTM proxy, together with a native email campaign engine so you can run one
+**authorized** phishing assessment end to end: Assessment → Target →
+Phishlet/Proxy → Lure → Template → Recipients → Campaign → Results → Session.
+Expert operators keep full control through the Advanced panels, and a guided
+wizard with safe presets lets a non-technical user run a click-through awareness
+campaign.
 
 **[Read the documentation →](https://openhat-security.github.io/phishkit/)**
 
-> **Alpha (`v0.1.0`).** This is a primitive, in-progress release — not a beta
-> and not a production product. Expect breaking changes. Build from source.
-> There is no signed installer.
+> **Alpha (`v0.1.0`).** This is an early, in-progress release. Expect breaking
+> changes, build from source, and note that there is no signed installer yet.
+> The email campaign and tracking flow works today; the evilginx AiTM capture
+> flow still needs manual setup to run (see [Run the AiTM proxy](#run-the-aitm-proxy)).
 
 > **For authorized security assessments only.** phishkit drives an AiTM proxy,
-> sends email, and handles captured credentials and live session tokens. Use it
+> sends email, and handles captured credentials and live session tokens. Run it
 > only with **explicit written authorization** from the owner of the targeted
 > systems and people. Read [authorized use](docs/guide/authorized-use.md) and
-> the [threat model](docs/reference/threat-model.md) before running anything.
+> the [threat model](docs/reference/threat-model.md) first.
 
 ## What you can do
 
-- **Run one assessment end to end** — take an engagement from target setup and
-  proxy to a captured session without stitching separate tools together, all in
-  the desktop app.
-- **Send with the native mail engine** — a draft → review → test → launch
-  campaign composer bound to a target, named lure, sender, template, and
-  recipient list; scheduling and send windows; delivered/opened/clicked/bounced
-  tracking via **your** SMTP or ESP; and CSV/JSON/redacted reporting. Sender and
-  content are snapshotted at creation for auditability.
-- **Capture and attribute real sessions** — evilginx captures what an attacker
-  would actually get, attributed deterministically back to the campaign attempt,
-  with a focused Sessions view (timeline, masked credentials, token/cookie
-  summary, export, and gated replay).
-- **Serve two audiences** — a guided wizard and a curated preset scenario library
-  with safe defaults for business users, layered over full Advanced controls for
-  expert operators.
-- **Run awareness campaigns** — a click-only training mode that never captures
-  credentials.
+- Take one engagement from target setup through to a captured session inside the
+  desktop app, without stitching separate tools together.
+- Send with the native mail engine: a draft, review, test, and launch composer
+  bound to a target, named lure, sender, template, and recipient list, with send
+  windows, delivered/opened/clicked/bounced tracking through your own SMTP or
+  ESP, and CSV/JSON/redacted reporting. The sender and content are snapshotted at
+  creation so a campaign stays auditable.
+- Capture and attribute real sessions: evilginx records what an attacker would
+  actually get, tied back to the campaign attempt, with a Sessions view that
+  shows the timeline, masked credentials, a token/cookie summary, export, and
+  gated replay.
+- Run a click-only awareness mode that never captures credentials, for training
+  campaigns.
 
-## Languages
+## Requirements
 
-| Surface | Languages |
-|---------|-----------|
-| Product (desktop, CLI, engine, demos) | TypeScript + Rust |
-| `scripts/` / kit glue | Python + shell OK |
-| `vendor/evilginx2` | Go (upstream only) |
+You need git, Rust stable (with `~/.cargo/bin` on your `PATH`), Node (see
+`.nvmrc`), the Go toolchain to build evilginx once, and the
+[Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) for your OS.
+
+The AiTM proxy needs two more things that the base setup does not install, so if
+you plan to use evilginx, install them now:
+
+```bash
+# Debian/Ubuntu example
+sudo apt-get install -y screen
+python3 -m pip install pexpect   # or: pip install -r scripts/requirements.txt
+```
+
+evilginx also binds ports 443 and 53, which require elevated privileges. See
+[Run the AiTM proxy](#run-the-aitm-proxy) for how to grant them.
+
+## Install and run
+
+phishkit is alpha. Build it from source and run it locally, only against domains
+and people you are authorized to assess.
+
+```bash
+git clone --recurse-submodules https://github.com/openhat-security/phishkit.git
+cd phishkit
+make build          # fetch vendor sources, then build the evilginx binary
+make setup          # rust check + desktop deps + docs deps
+make start          # run the desktop app (tauri dev)
+```
+
+The supported product is the desktop app under [`apps/desktop/`](apps/desktop/),
+with the AiTM kit under [`kit/evilginx/`](kit/evilginx/). Full platform notes are
+in the [install guide](docs/guide/install.md).
+
+## Quick start: a campaign end to end (no proxy)
+
+This path uses the headless CLI and the bundled demo apps, and it runs without
+elevated privileges. It exercises everything except the live evilginx capture.
+
+```bash
+make cli
+B=./target/release/phishkit
+
+# a sandbox so you don't touch your real data
+export PHISHKIT_CONFIG=$PWD/.pk/config PHISHKIT_DATA=$PWD/.pk/data
+
+make demo-cookie    # a mock login app on 127.0.0.1:9080 (run in another shell)
+
+$B wiz quickstart           # guided new assessment (needs a TTY)
+$B list-assessments
+$B --help                   # every subcommand
+```
+
+From there you create a target, add an SMTP mail account, author a template, add
+recipients, create and review a campaign, and export the report. The
+[CLI guide](docs/guide/cli.md) and [walkthrough](docs/guide/walkthrough.md) cover
+each step.
+
+Sending real mail needs an SMTP server that presents a publicly trusted
+certificate; the current build validates TLS against bundled roots and has no
+plaintext or private-CA option, so a self-signed lab sink will be rejected. To
+exercise the delivered/opened/clicked funnel without a live mail server, import
+tracking events for a campaign and read the report.
+
+## Run the AiTM proxy
+
+The evilginx capture flow needs the extra setup from [Requirements](#requirements)
+plus permission to bind privileged ports. Grant the ports once:
+
+```bash
+sudo setcap 'cap_net_bind_service=+ep' kit/evilginx/run/evilginx
+```
+
+Then drive a lure from the CLI:
+
+```bash
+$B ensure-destination ...        # scaffold a phishlet for your destination
+$B start-lure -p <profile> -d <host> -P <phishlet>
+```
+
+The launcher runs evilginx inside a detached `screen` session named
+`phishkit-evilginx`; attach with `screen -r phishkit-evilginx` and stop it with
+`screen -S phishkit-evilginx -X quit`. evilginx proxies the lure host to the
+real upstream site, so a working phishlet points at a reachable HTTPS origin that
+is **not** the lure host. The bundled `demo-cookie` phishlet is a capture-surface
+template against an HTTP-only mock, so it illustrates the config but does not
+complete a live proxy on its own. See [phishlet authoring](docs/guide/phishlets.md)
+for building one that captures.
 
 ## Repository map
 
@@ -79,59 +158,26 @@ box.
 | `scripts/` | Automation helpers (Python/shell) |
 | `packaging/` | Homebrew / AUR / Debian stubs |
 
-## Install
+## Languages
 
-phishkit is **alpha** (`v0.1.0`) — not beta, not production. Build it from
-source and run it locally. Use it only against domains and people you are
-authorized to assess.
-
-```bash
-git clone --recurse-submodules https://github.com/openhat-security/phishkit.git
-cd phishkit
-make build          # ensure vendor sources, then build the evilginx binary
-make setup          # rust check + desktop deps + docs deps
-make start          # run the supported desktop app (tauri dev)
-```
-
-Requires git, Rust stable (`~/.cargo/bin` on `PATH`), Node (see `.nvmrc`), the Go
-toolchain (to build evilginx once), and the Tauri prerequisites for your OS. Full
-instructions, including platform support, are in the
-[install guide](docs/guide/install.md).
-
-The supported product is the desktop app under [`apps/desktop/`](apps/desktop/)
-with the AiTM kit under [`kit/evilginx/`](kit/evilginx/).
-
-## Command line
-
-```bash
-make cli
-./target/release/phishkit --help
-./target/release/phishkit wiz quickstart   # guided new assessment (TTY)
-./target/release/phishkit list-assessments
-```
-
-See the [CLI guide](docs/guide/cli.md).
+| Surface | Languages |
+|---------|-----------|
+| Product (desktop, CLI, engine, demos) | TypeScript + Rust |
+| `scripts/` and kit glue | Python + shell |
+| `vendor/evilginx2` | Go (upstream only) |
 
 ## Develop
 
-Requires Node (see `.nvmrc`), Rust stable, Make, and the Tauri prerequisites for
-your OS. `make help` lists every target.
-
-```bash
-make setup          # rust check + desktop deps + docs deps
-make start          # run the desktop app
-```
-
-Quality checks before a PR (these mirror CI):
+`make help` lists every target. The checks below mirror CI:
 
 ```bash
 make test           # cargo fmt --check + cargo test (core + cli)
 make lint           # cargo clippy --all-targets
-make test-integration-docker   # desktop UI suite in Linux+Xvfb (optional)
+make test-integration-docker   # desktop UI suite in Linux + Xvfb (optional)
 ```
 
-See [Testing](docs/guide/testing.md). Do not run the desktop UI suite against
-your live Application Support database.
+Do not run the desktop UI suite against your live Application Support database.
+See [Testing](docs/guide/testing.md).
 
 Work on the documentation site:
 
@@ -142,11 +188,11 @@ make docs-build     # production build; fails on unresolved internal links
 
 ## Contributing
 
-Contributions are welcome under GPL-3.0. Please read
-[CONTRIBUTING.md](CONTRIBUTING.md) and our
+Contributions are welcome under GPL-3.0. Read
+[CONTRIBUTING.md](CONTRIBUTING.md) and the
 [Code of Conduct](CODE_OF_CONDUCT.md) first. Report security issues privately per
-[SECURITY.md](SECURITY.md) — never in a public issue. phishkit is for authorized
-use; requests to enable unauthorized use are out of scope.
+[SECURITY.md](SECURITY.md) rather than in a public issue. phishkit is for
+authorized use, and requests to enable unauthorized use are out of scope.
 
 ## Documentation
 
@@ -174,8 +220,8 @@ The full site is at
 ## License
 
 phishkit is licensed under [GPL-3.0](LICENSE). It orchestrates and templates
-around upstream open-source projects (notably
-[evilginx2](https://github.com/kgretzky/evilginx2)); you are responsible for
+around upstream open-source projects, notably
+[evilginx2](https://github.com/kgretzky/evilginx2); you are responsible for
 understanding and complying with their licenses.
 
 phishkit is an independent project. Use it lawfully and only with written
