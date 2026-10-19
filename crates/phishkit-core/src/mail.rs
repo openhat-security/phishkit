@@ -69,6 +69,57 @@ fn is_masked(s: &str) -> bool {
     s == SECRET_MASK || s.chars().all(|c| c == '•')
 }
 
+fn open_settings_secrets(mut s: MailSettings) -> AppResult<MailSettings> {
+    s.password = crate::secret_store::open(&s.password)?;
+    s.api_key = crate::secret_store::open(&s.api_key)?;
+    Ok(s)
+}
+
+fn seal_settings_secrets(mut s: MailSettings) -> AppResult<MailSettings> {
+    s.password = crate::secret_store::seal(&s.password)?;
+    s.api_key = crate::secret_store::seal(&s.api_key)?;
+    Ok(s)
+}
+
+/// Upgrade any legacy plaintext password/api_key rows to sealed form.
+fn migrate_seal_mail_secrets(conn: &rusqlite::Connection) -> AppResult<()> {
+    // smtp_settings singleton
+    let row: Option<(String, String)> = conn
+        .query_row(
+            "SELECT password, api_key FROM smtp_settings WHERE id = 1",
+            [],
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        )
+        .optional()?;
+    if let Some((pass, key)) = row {
+        let (pass2, c1) = crate::secret_store::reseal_if_plaintext(&pass)?;
+        let (key2, c2) = crate::secret_store::reseal_if_plaintext(&key)?;
+        if c1 || c2 {
+            conn.execute(
+                "UPDATE smtp_settings SET password = ?1, api_key = ?2 WHERE id = 1",
+                params![pass2, key2],
+            )?;
+        }
+    }
+    let mut stmt = conn.prepare("SELECT id, password, api_key FROM mail_accounts")?;
+    let rows: Vec<(String, String, String)> = stmt
+        .query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))?
+        .filter_map(|r| r.ok())
+        .collect();
+    drop(stmt);
+    for (id, pass, key) in rows {
+        let (pass2, c1) = crate::secret_store::reseal_if_plaintext(&pass)?;
+        let (key2, c2) = crate::secret_store::reseal_if_plaintext(&key)?;
+        if c1 || c2 {
+            conn.execute(
+                "UPDATE mail_accounts SET password = ?1, api_key = ?2 WHERE id = ?3",
+                params![pass2, key2, id],
+            )?;
+        }
+    }
+    Ok(())
+}
+
 fn redact_mail_settings(mut s: MailSettings) -> MailSettings {
     s.password = mask_secret(&s.password);
     s.api_key = mask_secret(&s.api_key);
@@ -257,6 +308,7 @@ pub fn get_smtp_settings() -> AppResult<MailSettings> {
 }
 
 fn write_active_smtp(conn: &rusqlite::Connection, settings: &MailSettings) -> AppResult<()> {
+    let settings = seal_settings_secrets(settings.clone())?;
     let now = now_iso();
     conn.execute(
         "INSERT INTO smtp_settings(id, host, port, username, password, from_email, from_name,
@@ -313,7 +365,10 @@ pub fn get_settings_for_account(id: &str) -> AppResult<Option<MailSettings>> {
                 settings_from_account_row,
             )
             .optional()?;
-        Ok(row)
+        match row {
+            Some(s) => Ok(Some(open_settings_secrets(s)?)),
+            None => Ok(None),
+        }
     })
 }
 
@@ -378,7 +433,7 @@ fn migrate_legacy_smtp_to_accounts(conn: &rusqlite::Connection) -> AppResult<()>
     if s.from_email.trim().is_empty() && s.username.trim().is_empty() && s.password.is_empty() {
         return Ok(());
     }
-    let s = s.normalize();
+    let s = seal_settings_secrets(s.normalize())?;
     let id = uuid::Uuid::new_v4().to_string();
     let now = now_iso();
     let label = if !s.from_email.is_empty() {
@@ -417,6 +472,7 @@ fn migrate_legacy_smtp_to_accounts(conn: &rusqlite::Connection) -> AppResult<()>
 pub fn get_mail_settings() -> AppResult<MailSettings> {
     with_db(|conn| {
         migrate_legacy_smtp_to_accounts(conn)?;
+        migrate_seal_mail_secrets(conn)?;
         if let Some(aid) = active_account_id(conn) {
             let row = conn.query_row(
                 "SELECT id, label, provider, host, port, username, password, from_email, from_name,
@@ -426,7 +482,7 @@ pub fn get_mail_settings() -> AppResult<MailSettings> {
                 settings_from_account_row,
             );
             if let Ok(s) = row {
-                return Ok(s);
+                return open_settings_secrets(s);
             }
         }
         let row = conn.query_row(
@@ -451,7 +507,7 @@ pub fn get_mail_settings() -> AppResult<MailSettings> {
                 })
             },
         );
-        Ok(row.unwrap_or_default().normalize())
+        open_settings_secrets(row.unwrap_or_default().normalize())
     })
 }
 
@@ -502,6 +558,7 @@ pub fn save_mail_settings(settings: MailSettings) -> AppResult<MailSettings> {
 pub fn list_mail_accounts() -> AppResult<Vec<MailAccount>> {
     with_db(|conn| {
         migrate_legacy_smtp_to_accounts(conn)?;
+        migrate_seal_mail_secrets(conn)?;
         let active = active_account_id(conn).unwrap_or_default();
         let mut stmt = conn.prepare(
             "SELECT id, label, provider, host, port, username, password, from_email, from_name,
@@ -596,6 +653,7 @@ pub fn upsert_mail_account(req: UpsertMailAccount) -> AppResult<MailAccount> {
 
     with_db(|conn| {
         migrate_legacy_smtp_to_accounts(conn)?;
+        migrate_seal_mail_secrets(conn)?;
         // Preserve secrets if updating and new values are empty
         let existing: Option<(String, String)> = conn
             .query_row(
@@ -605,6 +663,7 @@ pub fn upsert_mail_account(req: UpsertMailAccount) -> AppResult<MailAccount> {
             )
             .ok();
         if let Some((pass, key)) = existing {
+            // Keep the stored (possibly already sealed) secret when the UI sent empty/mask.
             if settings.password.is_empty() {
                 settings.password = pass;
             }
@@ -612,6 +671,8 @@ pub fn upsert_mail_account(req: UpsertMailAccount) -> AppResult<MailAccount> {
                 settings.api_key = key;
             }
         }
+        // Seal plaintext secrets before they touch the DB. Already-sealed values pass through.
+        settings = seal_settings_secrets(settings)?;
         let created: String = conn
             .query_row(
                 "SELECT created_at FROM mail_accounts WHERE id = ?1",
