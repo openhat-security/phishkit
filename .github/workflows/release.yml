@@ -64,7 +64,12 @@ jobs:
           VER="${GITHUB_REF_NAME#v}"
           REPO="${{ github.repository }}"
           # Prefer linux gnu archive for AUR/debian source pointer
-          TGZ=$(ls artifacts/phishkit-${VER}-x86_64-unknown-linux-gnu.tar.gz | head -1)
+          mapfile -t _tgzs < <(find artifacts -maxdepth 1 -type f -name "phishkit-${VER}-x86_64-unknown-linux-gnu.tar.gz" | sort)
+          if [[ ${#_tgzs[@]} -eq 0 ]]; then
+            echo "missing linux gnu archive under artifacts/" >&2
+            exit 1
+          fi
+          TGZ="${_tgzs[0]}"
           SHA=$(sha256sum "$TGZ" | awk '{print $1}')
           URL="https://github.com/${REPO}/releases/download/${GITHUB_REF_NAME}/$(basename "$TGZ")"
 
