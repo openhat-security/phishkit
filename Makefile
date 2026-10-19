@@ -73,6 +73,18 @@ help:
 demo-cookie:
 	@(cd demos && npm install --silent && npm run demo:cookie)
 
+
+# HTTPS upstream mock on 127.0.0.2:443 for AiTM dry-run (distinct from lure host).
+# Requires cap_net_bind_service on node (or root). Pairs with phishlet demo-cookie.
+demo-cookie-https:
+	@mkdir -p run; \
+	HOST=127.0.0.2 PORT=443 DEMO_COOKIE_TLS=1 \
+	  (cd demos && npm install --silent && npx --yes tsx cookie/server.ts) & echo $$! > run/demo-cookie-https.pid; \
+	echo "demo-cookie HTTPS → https://127.0.0.2:443  (cookie-origin.local.phishkit)"; \
+	echo "Add to /etc/hosts:  127.0.0.2 cookie-origin.local.phishkit"; \
+	echo "Lure host stays:     127.0.0.1 demo-cookie.local.phishkit"
+
+
 demo-firebase:
 	@(cd demos && npm install --silent && npm run demo:firebase)
 
@@ -162,7 +174,20 @@ setup:
 	@export PATH="$$HOME/.cargo/bin:$$PATH"; \
 	command -v cargo >/dev/null || { echo "cargo not found. Install Rust: https://rustup.rs (then restart the shell)"; exit 1; }; \
 	echo "==> desktop dependencies"; (cd apps/desktop && npm install); \
-	echo "==> docs dependencies"; npm install
+	echo "==> docs dependencies"; npm install; \
+	echo "==> evilginx runtime (screen + pexpect)"; \
+	if ! command -v screen >/dev/null 2>&1; then \
+	  echo "    screen not found — install with: sudo apt-get install -y screen   (or brew install screen)"; \
+	  echo "    AiTM start-lure will fail without it."; \
+	else echo "    screen: $$(command -v screen)"; fi; \
+	if [ ! -x venv/bin/python3 ]; then python3 -m venv venv; fi; \
+	./venv/bin/pip -q install -r scripts/requirements.txt; \
+	echo "    pexpect: $$(./venv/bin/python3 -c 'import pexpect; print(pexpect.__version__)')"; \
+	echo "==> privileged ports note"; \
+	echo "    evilginx binds :443 and :53. After build-evilginx, either run as root or:"; \
+	echo "      sudo setcap cap_net_bind_service=+ep kit/evilginx/run/evilginx"; \
+	echo "    For the cookie demo AiTM path also allow the HTTPS mock on 127.0.0.2:443:"; \
+	echo "      sudo setcap cap_net_bind_service=+ep \$$(command -v node)   # or run make demo-cookie-https as root"
 
 # Run the supported desktop app.
 start: desktop

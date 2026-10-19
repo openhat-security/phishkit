@@ -1,16 +1,33 @@
-# Demo: portal (cookie session) (cookie session)
+# Demo: portal (cookie session)
 
 ## Target notes
 
 | Field | Value |
 |-------|-------|
-| Upstream mock | http://127.0.0.1:9080 |
-| Start | `make demo-cookie` |
-| Phishlet | `demo-cookie` (`kit/evilginx/phishlets/demo-cookie.yaml`) |
-| Dry-run domain | `demo-cookie.local.phishkit` |
+| HTTP mock (no AiTM) | http://127.0.0.1:9080 (`make demo-cookie`) |
+| HTTPS origin (AiTM) | https://127.0.0.2:443 (`make demo-cookie-https`) |
+| Upstream hostname | `cookie-origin.local.phishkit` → 127.0.0.2 |
+| Lure hostname | `demo-cookie.local.phishkit` → 127.0.0.1 |
+| Phishlet | `demo-cookie` |
 | Login path | `/login` |
 | Test user | `demo@phishkit.local` |
 | Test password | `demo-password` |
+
+## /etc/hosts
+
+```
+127.0.0.1 demo-cookie.local.phishkit
+127.0.0.2 cookie-origin.local.phishkit
+```
+
+## Privileged ports
+
+evilginx binds `:443` and `:53`. The HTTPS mock binds `127.0.0.2:443` so it does not collide with evilginx on `127.0.0.1`.
+
+```bash
+sudo setcap cap_net_bind_service=+ep kit/evilginx/run/evilginx
+sudo setcap cap_net_bind_service=+ep "$(command -v node)"
+```
 
 ## Expected capture
 
@@ -29,13 +46,5 @@ curl -s -c /tmp/pk-demo-cookie.jar -b /tmp/pk-demo-cookie.jar -L \
   -o /dev/null -w '%{http_code} %{url_effective}\n'
 grep session /tmp/pk-demo-cookie.jar
 ```
-
-## Desktop Target
-
-1. `make desktop`
-2. Create an assessment → add Target `demo-cookie.local.phishkit`
-3. Import / select phishlet `demo-cookie`
-4. Start destination with dry-run domain `demo-cookie.local.phishkit`
-5. Apply `/etc/hosts` when prompted; open the lure in a fresh browser profile
 
 Authorized dry-runs only.

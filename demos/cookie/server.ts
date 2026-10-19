@@ -2,7 +2,10 @@
  * Cookie-session practice app for local phishkit dry-runs.
  * http://127.0.0.1:9080 — creds: demo@phishkit.local / demo-password
  */
-import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { createServer as createHttpServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { createServer as createHttpsServer } from "node:https";
+import { existsSync, mkdirSync } from "node:fs";
+import { join } from "node:path";
 import { createHmac, randomBytes } from "node:crypto";
 import { parse as parseQuery } from "node:querystring";
 
@@ -110,7 +113,7 @@ function readBody(req: IncomingMessage): Promise<string> {
   });
 }
 
-const server = createServer(async (req, res) => {
+async function handle(req: IncomingMessage, res: ServerResponse) {
   const url = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`);
   const path = url.pathname;
   console.log(`[demo-cookie] ${req.socket.remoteAddress} ${req.method} ${path}`);
@@ -177,10 +180,44 @@ const server = createServer(async (req, res) => {
   }
 
   send(res, 404, "not found\n", "text/plain; charset=utf-8");
-});
+}
+
+
+
+
+const USE_TLS = process.env.DEMO_COOKIE_TLS === "1" || process.env.DEMO_COOKIE_TLS === "true";
+
+function selfSignedCert(): { key: string; cert: string } {
+  const { readFileSync } = require("node:fs") as typeof import("node:fs");
+  const { spawnSync } = require("node:child_process") as typeof import("node:child_process");
+  const dir = join(process.cwd(), "..", "run");
+  try { mkdirSync(dir, { recursive: true }); } catch { /* ignore */ }
+  const keyPath = join(dir, "demo-cookie-key.pem");
+  const certPath = join(dir, "demo-cookie-cert.pem");
+  if (!(existsSync(keyPath) && existsSync(certPath))) {
+    const subj = "/CN=cookie-origin.local.phishkit";
+    const gen = spawnSync(
+      "openssl",
+      ["req", "-x509", "-newkey", "rsa:2048", "-keyout", keyPath, "-out", certPath, "-days", "365", "-nodes", "-subj", subj],
+      { encoding: "utf8" },
+    );
+    if (gen.status !== 0) {
+      throw new Error(`openssl self-signed cert failed: ${gen.stderr || gen.stdout}`);
+    }
+  }
+  return { key: readFileSync(keyPath, "utf8"), cert: readFileSync(certPath, "utf8") };
+}
+
+const server = USE_TLS
+  ? createHttpsServer(selfSignedCert(), (req, res) => { void handle(req, res); })
+  : createHttpServer((req, res) => { void handle(req, res); });
 
 server.listen(PORT, HOST, () => {
-  console.log(`demo-cookie listening on http://${HOST}:${PORT}`);
-  console.log(`  login:  http://${HOST}:${PORT}/login`);
+  const scheme = USE_TLS ? "https" : "http";
+  console.log(`demo-cookie listening on ${scheme}://${HOST}:${PORT}`);
+  console.log(`  login:  ${scheme}://${HOST}:${PORT}/login`);
   console.log(`  creds:  ${DEMO_USER} / ${DEMO_PASS}`);
+  if (USE_TLS) {
+    console.log("  hosts:  127.0.0.2 cookie-origin.local.phishkit");
+  }
 });

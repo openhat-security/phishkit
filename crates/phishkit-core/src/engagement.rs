@@ -33,8 +33,50 @@ pub fn slugify(name: &str) -> String {
     }
 }
 
+/// Multi-part public suffixes we treat as a single registrable unit (M1).
+/// Not a full PSL, but covers the compound hosts that broke phishlet generation.
+const MULTI_PART_PUBLIC_SUFFIXES: &[&str] = &[
+    "co.uk",
+    "org.uk",
+    "ac.uk",
+    "gov.uk",
+    "com.au",
+    "net.au",
+    "org.au",
+    "co.nz",
+    "co.jp",
+    "com.br",
+    "com.mx",
+    "co.in",
+    "github.io",
+    "herokuapp.com",
+    "vercel.app",
+    "netlify.app",
+    "local.phishkit",
+];
+
+/// Registrable domain (approx eTLD+1). Handles compound public suffixes so
+/// `app.acme.co.uk` → `acme.co.uk` instead of the naive `co.uk` (M1 / C1).
 pub fn upstream_domain(target_host: &str) -> String {
     let host = normalize_target_host(target_host);
+    if host.is_empty() {
+        return host;
+    }
+    let host_l = host.to_ascii_lowercase();
+    for suffix in MULTI_PART_PUBLIC_SUFFIXES {
+        let dotted = format!(".{suffix}");
+        if host_l == *suffix {
+            return host;
+        }
+        if let Some(rest) = host_l.strip_suffix(&dotted) {
+            // rest is labels left of the public suffix; take the last one + suffix.
+            let label = rest.rsplit('.').next().unwrap_or(rest);
+            if label.is_empty() {
+                return host;
+            }
+            return format!("{label}.{suffix}");
+        }
+    }
     let parts: Vec<&str> = host.split('.').collect();
     if parts.len() >= 3 {
         parts[parts.len() - 2..].join(".")
@@ -217,8 +259,41 @@ mod tests {
     #[test]
     fn dryrun_and_landing_sub() {
         assert_eq!(upstream_domain("app.acme.com"), "acme.com");
+        assert_eq!(upstream_domain("login.acme.co.uk"), "acme.co.uk");
+        assert_eq!(upstream_domain("foo.bar.github.io"), "bar.github.io");
+        assert_eq!(
+            upstream_domain("demo-cookie.local.phishkit"),
+            "demo-cookie.local.phishkit"
+        );
+        assert_eq!(
+            upstream_domain("cookie-origin.local.phishkit"),
+            "cookie-origin.local.phishkit"
+        );
         assert_eq!(default_dryrun_domain("app.acme.com"), "acme.phishkit");
         assert_eq!(landing_sub("app.acme.com"), "app");
         assert_eq!(landing_sub("acme.com"), "");
+    }
+}
+
+#[cfg(test)]
+mod demo_phishlet_tests {
+    #[test]
+    fn demo_cookie_phishlet_does_not_self_proxy() {
+        let root = crate::kit::kit_root().expect("kit root");
+        let yaml = std::fs::read_to_string(root.join("kit/evilginx/phishlets/demo-cookie.yaml"))
+            .expect("demo-cookie.yaml");
+        // Upstream origin must be distinct from the lure hostname.
+        assert!(
+            yaml.contains("cookie-origin.local.phishkit"),
+            "demo-cookie.yaml must proxy to cookie-origin.local.phishkit"
+        );
+        assert!(
+            !yaml.contains("domain: 'demo-cookie.local.phishkit'"),
+            "demo-cookie.yaml must not use the lure host as upstream domain"
+        );
+        assert!(
+            yaml.contains("domain: 'cookie-origin.local.phishkit'"),
+            "proxy_hosts/login domain must be the origin host"
+        );
     }
 }

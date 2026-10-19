@@ -350,25 +350,64 @@ def configure_via_config_json(
         first_path = f"/{first_path}" if first_path else _pick_lure_path(phishlet)
     return lure_from_config(dryrun_domain, phishlet) or f"https://{landing_host}{first_path}"
 
-def _https_port_listening() -> bool:
-    probe = subprocess.run(
-        ["lsof", "-nP", "-iTCP:443", "-sTCP:LISTEN", "-t"],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    return bool(probe.stdout.strip())
+def _https_port_listening(port: int = 443) -> bool:
+    """True when something is accepting TCP on `port`.
+
+    Prefer a real connect to 127.0.0.1 (works without lsof/ss and matches what a
+    browser will hit). Fall back to `ss` / `lsof` for environments where connect
+    is filtered. Previously we only used `lsof`, which is often missing and
+    produced false "did not bind" failures while evilginx was already LISTEN.
+    """
+    import socket
+
+    try:
+        with socket.create_connection(("127.0.0.1", port), timeout=0.35):
+            return True
+    except OSError:
+        pass
+
+    try:
+        ss = subprocess.run(
+            ["ss", "-ltn"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if ss.returncode == 0 and ss.stdout:
+            needle = f":{port} "
+            for line in ss.stdout.splitlines():
+                if "LISTEN" in line and (needle in line or line.rstrip().endswith(f":{port}")):
+                    return True
+    except FileNotFoundError:
+        pass
+
+    try:
+        lsof = subprocess.run(
+            ["lsof", "-nP", f"-iTCP:{port}", "-sTCP:LISTEN", "-t"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        return bool(lsof.stdout and lsof.stdout.strip())
+    except FileNotFoundError:
+        return False
 
 
-def _wait_https_port(timeout_sec: float = 12.0) -> None:
+def _wait_https_port(timeout_sec: float = 25.0) -> None:
     deadline = time.time() + timeout_sec
     while time.time() < deadline:
         if _https_port_listening():
             return
         time.sleep(0.25)
+    # Final re-check after a short grace: the process may have bound in the
+    # last tick, and a single missed probe should not fail a healthy start.
+    time.sleep(0.5)
+    if _https_port_listening():
+        return
     raise ConfigureError(
         "evilginx did not bind HTTPS port 443 in time — "
-        "check evilginx.log (port in use or need elevated privileges)."
+        "check evilginx.log (port in use, or grant cap_net_bind_service / run as root). "
+        "See docs: privileged ports for :443/:53."
     )
 
 

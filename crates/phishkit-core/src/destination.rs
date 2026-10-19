@@ -127,6 +127,20 @@ pub fn ensure_destination(
     })
 }
 
+fn shipped_demo_phishlet(host: &str) -> Option<&'static str> {
+    let h = host.to_ascii_lowercase();
+    if h == "demo-cookie.local.phishkit"
+        || h == "cookie-origin.local.phishkit"
+        || h.ends_with(".demo-cookie.local.phishkit")
+    {
+        return Some("demo-cookie");
+    }
+    if h == "demo-firebase.local.phishkit" || h.ends_with(".demo-firebase.local.phishkit") {
+        return Some("demo-firebase");
+    }
+    None
+}
+
 fn ensure_phishlet(
     target: &str,
     stack_info: &StackInfo,
@@ -134,7 +148,11 @@ fn ensure_phishlet(
 ) -> AppResult<GenerateResult> {
     let root = kit_root()?;
     let host = normalize_target_host(target);
-    let name = phishlet_name_for_target(&host);
+    // Prefer the shipped demo phishlet over scaffolding a colliding
+    // demo-cookie-local-phishkit.yaml (C1).
+    let name = shipped_demo_phishlet(&host)
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| phishlet_name_for_target(&host));
     let dest = root.join(format!("kit/evilginx/phishlets/{name}.yaml"));
     let stack = stack_info.stack.as_str();
 
@@ -183,4 +201,22 @@ fn ensure_phishlet(
         }
     }
     phishlet::generate_phishlet(target, overwrite)
+}
+
+#[cfg(test)]
+mod demo_reuse_tests {
+    use super::shipped_demo_phishlet;
+
+    #[test]
+    fn shipped_demo_cookie_hosts_reuse_demo_cookie_phishlet() {
+        assert_eq!(
+            shipped_demo_phishlet("demo-cookie.local.phishkit"),
+            Some("demo-cookie")
+        );
+        assert_eq!(
+            shipped_demo_phishlet("cookie-origin.local.phishkit"),
+            Some("demo-cookie")
+        );
+        assert_eq!(shipped_demo_phishlet("app.acme.com"), None);
+    }
 }
