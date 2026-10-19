@@ -989,6 +989,10 @@ pub fn send_message(
 }
 
 pub fn send_test(to: String) -> AppResult<SendReceipt> {
+    // Enforce the acceptable-use gate on the test path too (H4). The production
+    // campaign send paths already call this; without it here the "test" send is a
+    // hole that delivers real mail without the operator accepting the policy.
+    crate::aup::require_aup()?;
     let settings = get_mail_settings()?;
     send_message(
         &settings,
