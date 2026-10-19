@@ -25,6 +25,8 @@ fn saved_smtp_password_is_not_plaintext_in_db_file() {
         api_key: "sg-live-api-key-ABCDEF".into(),
         region: String::new(),
         domain: String::new(),
+        smtp_security: String::new(),
+        accept_invalid_certs: false,
     };
     mail::save_mail_settings(settings).expect("save");
 
