@@ -25,8 +25,9 @@ session**. An expert operator keeps full control; a non-technical user can run a
 click-through campaign from the guided wizard. The supported product is the Tauri desktop app,
 with a headless CLI for scripting.
 
-> **Alpha — `v0.1.1-alpha.1`.** This is an early, in-progress release. Expect breaking changes,
-> and prefer building from source. The macOS and Linux Homebrew cask is the easiest way to try it.
+> **Alpha, `v0.1.1-alpha.1`.** This is an early, in-progress release. Expect breaking changes.
+> The CLI installs from Homebrew today. The desktop app builds from source for now, while the
+> signed `.dmg` and AppImage installers are still being set up.
 
 > **Authorized assessments only.** phishkit drives an AiTM proxy, sends email, and handles
 > captured credentials and live session tokens. Run it only with explicit written authorization
@@ -40,12 +41,17 @@ Install, then try the whole AiTM flow against a local mock app that ships with t
 target, no email, no privileges beyond a loopback host entry.
 
 ```bash
-# 1) Install (macOS / Linux — Homebrew; other options below)
-brew install --cask openhat-security/tap/phishkit
+# 1) Install. Two packages: the desktop app (cask) and the headless CLI (formula).
+brew install --cask openhat-security/tap/phishkit   # desktop UI (see note below)
+brew install openhat-security/tap/phishkit-cli      # CLI: installs `phishkit` and `phishkit_ctl`
 
-# 2) Start the guided desktop console
-phishkit            # or: make start  (from a source checkout)
+# 2) Launch the desktop console, or run the CLI
+open -a phishkit            # desktop app
+phishkit --help            # CLI (or: make start, from a source checkout)
 ```
+
+The CLI formula works today. The desktop cask points at the signed `.dmg` and AppImage, which
+are still being built, so for now install the desktop app from source (see [Install](#install)).
 
 Dry-run the capture surface from a source checkout, which stands up an HTTPS upstream and drives
 the cookie demo login through evilginx:
@@ -84,8 +90,11 @@ pick a phishlet, configure your own SMTP or ESP sender, and run a campaign from
 ## Install
 
 ```bash
-# macOS / Linux — Homebrew
+# Desktop app (macOS / Linux) via Homebrew cask
 brew install --cask openhat-security/tap/phishkit
+
+# Headless CLI only (macOS / Linux) via Homebrew formula
+brew install openhat-security/tap/phishkit-cli
 
 # from source (recommended for alpha)
 git clone --recurse-submodules https://github.com/openhat-security/phishkit.git

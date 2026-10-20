@@ -9,7 +9,8 @@ files to the GitHub Release.
 | Channel | Path | Alpha behavior |
 |---------|------|--------------------|
 | GitHub Releases | workflow artifacts | Primary — CLI `.tar.gz` + sha256 |
-| Homebrew | [`homebrew/phishkit.rb`](homebrew/phishkit.rb) | Formula attached; fill `sha256` after tag archive exists; push to your tap when ready |
+| Homebrew (CLI) | [`homebrew/phishkit-cli.rb`](homebrew/phishkit-cli.rb) | Formula; builds the CLI from the tag source. `sha256` is set for v0.1.1-alpha.1; push to the tap as `phishkit-cli` |
+| Homebrew (desktop) | [`homebrew/phishkit.rb`](homebrew/phishkit.rb) | Cask for the Tauri desktop app. Needs built/signed `.dmg`/`.AppImage` artifacts on the release before the `sha256` placeholders can be filled |
 | AUR | [`aur/PKGBUILD`](aur/PKGBUILD) | PKGBUILD attached with asset URL/sha; publish manually or with `AUR_SSH_PRIVATE_KEY` later |
 | Debian / Launchpad | [`debian/`](debian/) | Changelog bumped; `dput` remains operator-driven (`REPLACE_ME` identities) |
 
