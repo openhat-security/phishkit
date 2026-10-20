@@ -13,14 +13,17 @@ use std::time::Duration;
 use phishkit_core::mail::{self, smtp_security_mode, MailSettings, SmtpSecurityMode};
 use support::isolate_storage;
 
-/// Minimal cleartext SMTP sink that accepts one message and records the DATA body.
-fn serve_plain_smtp() -> (
+/// Port, captured DATA body, connection count, stop flag, and the server thread.
+type PlainSmtpSink = (
     u16,
     Arc<Mutex<String>>,
     Arc<AtomicUsize>,
     Arc<AtomicBool>,
     thread::JoinHandle<()>,
-) {
+);
+
+/// Minimal cleartext SMTP sink that accepts one message and records the DATA body.
+fn serve_plain_smtp() -> PlainSmtpSink {
     let listener = TcpListener::bind("127.0.0.1:0").expect("bind");
     let port = listener.local_addr().unwrap().port();
     let body = Arc::new(Mutex::new(String::new()));
