@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
+  <title id="title">phishkit - Run an authorized AiTM assessment end to end.</title>
+  <desc id="desc">Hero art for phishkit: an authorized adversary-in-the-middle and awareness kit that runs assessment, target, proxy, lure, campaign, and session capture in one desktop app.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b1220"/>
+      <stop offset="55%" stop-color="#111827"/>
+      <stop offset="100%" stop-color="#4c0519"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0.2" y1="0" x2="0.9" y2="1">
+      <stop offset="0%" stop-color="#fb7185" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.08"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="24"/>
+    </filter>
+    <linearGradient id="termTop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1f2937"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="640" fill="url(#bg)"/>
+  <circle cx="1080" cy="80" r="220" fill="url(#glow)" filter="url(#soft)"/>
+  <circle cx="160" cy="560" r="180" fill="#fb7185" opacity="0.08" filter="url(#soft)"/>
+
+  <text x="72" y="88" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="26" font-weight="700" letter-spacing="4" fill="#fda4af">PHISHKIT</text>
+  <text x="72" y="148" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="40" font-weight="700" fill="#f8fafc">Run the assessment.</text>
+  <text x="72" y="200" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="40" font-weight="700" fill="#f8fafc">Proxy the login.</text>
+  <text x="72" y="252" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="40" font-weight="700" fill="#f8fafc">Capture the session.</text>
+  <text x="72" y="298" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="16" fill="#fecdd3">An authorized AiTM + awareness kit, start to finish, in one app.</text>
+
+  <g font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="16">
+    <text x="72" y="340" fill="#fda4af" font-weight="700">1</text>
+    <text x="96" y="340" fill="#94a3b8">Scope an assessment and its target</text>
+    <text x="72" y="368" fill="#fda4af" font-weight="700">2</text>
+    <text x="96" y="368" fill="#94a3b8">Proxy the real login with evilginx</text>
+    <text x="72" y="396" fill="#fda4af" font-weight="700">3</text>
+    <text x="96" y="396" fill="#94a3b8">Send a lure, then read the captured session</text>
+  </g>
+
+  <text x="72" y="438" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" font-weight="700" letter-spacing="2" fill="#64748b">WORKS WITH</text>
+  <g font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="13" font-weight="600">
+    <rect x="72" y="452" rx="10" ry="10" width="118" height="40" fill="#4c0519" stroke="#fb7185" stroke-width="1"/>
+    <rect x="86" y="464" width="12" height="16" rx="2" fill="#fb7185"/>
+    <text x="104" y="477" fill="#fecdd3">evilginx</text>
+    <rect x="200" y="452" rx="10" ry="10" width="110" height="40" fill="#172554" stroke="#38bdf8" stroke-width="1"/>
+    <circle cx="222" cy="472" r="8" fill="#38bdf8"/>
+    <text x="238" y="477" fill="#bae6fd">SMTP</text>
+    <rect x="320" y="452" rx="10" ry="10" width="132" height="40" fill="#042f2e" stroke="#2dd4bf" stroke-width="1"/>
+    <rect x="334" y="464" width="16" height="16" rx="3" fill="none" stroke="#5eead4" stroke-width="1.8"/>
+    <text x="358" y="477" fill="#99f6e4">Tauri app</text>
+  </g>
+
+  <g font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="13" font-weight="600">
+    <rect x="72" y="508" rx="999" ry="999" width="110" height="28" fill="#881337"/>
+    <text x="127" y="527" text-anchor="middle" fill="#fecdd3">assessment</text>
+    <rect x="192" y="508" rx="999" ry="999" width="72" height="28" fill="#1e3a5f"/>
+    <text x="228" y="527" text-anchor="middle" fill="#bae6fd">target</text>
+    <rect x="274" y="508" rx="999" ry="999" width="66" height="28" fill="#312e81"/>
+    <text x="307" y="527" text-anchor="middle" fill="#c7d2fe">proxy</text>
+    <rect x="350" y="508" rx="999" ry="999" width="60" height="28" fill="#164e63"/>
+    <text x="380" y="527" text-anchor="middle" fill="#a5f3fc">lure</text>
+    <rect x="420" y="508" rx="999" ry="999" width="86" height="28" fill="#4c0519"/>
+    <text x="463" y="527" text-anchor="middle" fill="#fecdd3">session</text>
+  </g>
+
+  <g transform="translate(640,48)">
+    <rect width="568" height="544" rx="16" ry="16" fill="#020617" stroke="#334155" stroke-width="1.5"/>
+    <rect width="568" height="44" rx="16" ry="16" fill="url(#termTop)"/>
+    <rect y="28" width="568" height="16" fill="url(#termTop)"/>
+    <circle cx="28" cy="22" r="6" fill="#f87171"/>
+    <circle cx="50" cy="22" r="6" fill="#fbbf24"/>
+    <circle cx="72" cy="22" r="6" fill="#34d399"/>
+    <text x="284" y="27" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="13" fill="#64748b">phishkit</text>
+
+    <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#e2e8f0">
+      <text x="28" y="78" fill="#fb7185" xml:space="preserve"> _ __  _ __ (_)___| |__ | | _(_) |_</text>
+      <text x="28" y="96" fill="#fb7185" xml:space="preserve">| '_ \| '_ \| / __| '_ \| |/ / | __|</text>
+      <text x="28" y="114" fill="#fb7185" xml:space="preserve">| |_) | | | | \__ \ | | |   &lt;| | |_</text>
+      <text x="28" y="132" fill="#fb7185" xml:space="preserve">| .__/|_| |_|_|___/_| |_|_|\_\_|\__|</text>
+      <text x="28" y="150" fill="#fb7185" xml:space="preserve">|_|  authorized AiTM + awareness kit</text>
+
+      <text x="28" y="186"><tspan fill="#f8fafc" font-weight="700">phishkit</tspan><tspan fill="#94a3b8"> - assess / proxy / lure / capture</tspan></text>
+
+      <text x="28" y="222" fill="#64748b">Authorized assessments only.</text>
+
+      <text x="28" y="258" fill="#fda4af" font-weight="700">desktop</text>
+      <text x="28" y="280" xml:space="preserve">  make start    guided Tauri console</text>
+
+      <text x="28" y="316" fill="#fda4af" font-weight="700">cli</text>
+      <text x="28" y="338" xml:space="preserve">  phishkit wiz quickstart</text>
+
+      <text x="28" y="374" fill="#fda4af" font-weight="700">dry-run</text>
+      <text x="28" y="396" xml:space="preserve">  make test-aitm    cookie demo capture</text>
+
+      <text x="28" y="438" fill="#64748b">$</text>
+      <text x="44" y="438" fill="#e2e8f0">make demo-cookie &amp;&amp; make test-aitm</text>
+      <text x="44" y="462" fill="#34d399" xml:space="preserve">[ok] session captured  demo@phishkit.local</text>
+      <rect x="500" y="474" width="8" height="16" fill="#fb7185"/>
+    </g>
+  </g>
+</svg>
