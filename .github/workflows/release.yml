@@ -46,7 +46,11 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: cli-${{ matrix.target }}
-          path: dist/*
+          # Only the per-target archive + checksum. The loose binaries have the
+          # same name on every target, so uploading them collides on the release.
+          path: |
+            dist/*.tar.gz
+            dist/*.tar.gz.sha256
 
   packaging:
     needs: cli
@@ -169,6 +173,9 @@ jobs:
             - Walkthrough videos are **not** attached (too large for GitHub); generate locally
             - Live tap/AUR/PPA publish requires maintainer secrets (see `packaging/README.md`)
           files: |
-            release-assets/**
+            release-assets/*.tar.gz
+            release-assets/*.tar.gz.sha256
+            release-assets/phishkit.rb
+            release-assets/PKGBUILD
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
