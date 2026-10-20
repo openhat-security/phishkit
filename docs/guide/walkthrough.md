@@ -51,3 +51,88 @@ live on a CDN or unlisted YouTube — not as GitHub Release assets.
 | `ffmpeg` (recommended) | Seekable MP4 output (`brew install ffmpeg`) |
 
 See [Testing](/guide/testing) and [release notes](/reference/release).
+
+## AiTM demo end to end
+
+The cookie demo can run as a full evilginx dry-run: a "victim" opens a lure URL,
+evilginx proxies to the real app, and the session cookie is captured. This needs
+two distinct hosts, because an AiTM proxy cannot proxy to itself (the shipped
+phishlet used to point its upstream at the lure host, so evilginx dialed its own
+hostname and looped).
+
+| Host | Role | Resolves to |
+| --- | --- | --- |
+| `demo-cookie.local.phishkit` | Lure, served by evilginx | `127.0.0.1` |
+| `app.cookie-demo.test` | Upstream app evilginx proxies to | `127.0.0.2` |
+
+The shipped `demo-cookie` phishlet is wired for this split.
+
+### 1. Install the runtime deps
+
+`make setup` installs `pexpect` into a managed `venv/` and checks for `screen`.
+evilginx needs `screen` to run with a real TTY; install it if setup reports it
+missing (`apt-get install screen` or `brew install screen`).
+
+### 2. Map the hosts
+
+```bash
+sudo tee -a /etc/hosts <<'EOF'
+127.0.0.1   demo-cookie.local.phishkit
+127.0.0.2   app.cookie-demo.test
+EOF
+```
+
+### 3. Start the HTTPS upstream
+
+```bash
+sudo make demo-cookie-tls        # serves the cookie app over TLS on 127.0.0.2:443
+```
+
+This generates a self-signed cert for `app.cookie-demo.test` (under
+`demos/.certs/`, gitignored) and serves the cookie app over HTTPS. evilginx
+proxies to it with certificate verification off, so a self-signed cert is fine
+for the dry-run.
+
+### 4. Launch the lure
+
+evilginx binds `:443` and `:53`, which need privileges. Grant the binary the
+capability once, or run as root:
+
+```bash
+sudo setcap cap_net_bind_service=+ep kit/evilginx/run/evilginx
+```
+
+Then start the lure from the desktop app (Recon & Proxy, then Start + get lure,
+phishlet `demo-cookie`) or the CLI. Open the printed
+`https://demo-cookie.local.phishkit/...` URL in a fresh browser profile and click
+through the self-signed warning. Sign in with `demo@phishkit.local` /
+`demo-password`; the captured session shows up in Sessions.
+
+#### Unprivileged lure port
+
+To avoid root for the lure, set high ports before starting:
+
+```bash
+export EVILGINX_HTTPS_PORT=8443
+export EVILGINX_DNS_PORT=5353
+```
+
+The lure then serves on `:8443`. evilginx still dials the upstream on `:443`, so
+`make demo-cookie-tls` keeps needing root or setcap for that listener.
+
+### Teardown
+
+The launcher tears down its own `screen` session when a start fails. To stop a
+running lure:
+
+```bash
+make evilginx-stop               # quits the phishkit-evilginx screen session
+```
+
+### Automated checks
+
+```bash
+make test-aitm                           # unprivileged: HTTPS upstream + cookie capture surface
+make test-python                         # lure launcher unit tests
+sudo bash tests/smoke/aitm_e2e_sudo.sh   # full proxy loop through evilginx (lab box)
+```

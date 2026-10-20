@@ -55,6 +55,22 @@ jobs:
       - run: npm ci
       - run: npm run build
 
+  aitm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: demos/package-lock.json
+      - name: Python unit tests (evilginx lure launcher)
+        run: python3 -m unittest discover -s tests/python -v
+      - name: AiTM demo smoke test (HTTPS upstream + cookie capture surface)
+        run: bash tests/smoke/demo_cookie_e2e.sh
+
   workflow-lint:
     runs-on: ubuntu-latest
     steps:

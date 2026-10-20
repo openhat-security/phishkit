@@ -255,15 +255,10 @@ pub fn paths_info() -> AppResult<PathsInfo> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Mutex;
-
-    use once_cell::sync::Lazy;
-
-    static ENV_LOCK: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
 
     #[test]
     fn config_and_data_dir_honor_env() {
-        let _g = ENV_LOCK.lock().unwrap();
+        let _g = crate::test_lock::env_guard();
         let tmp = tempfile::tempdir().unwrap();
         let cfg = tmp.path().join("cfg");
         let data = tmp.path().join("data");

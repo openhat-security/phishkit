@@ -2,9 +2,10 @@
 	build-evilginx build \
 	validate-phishlet evilginx-dryrun evilginx-prod evilginx-creds \
 	evilginx-start evilginx-stop \
-	demo demo-cookie demo-firebase demo-tunnel \
+	demo demo-cookie demo-cookie-tls demo-firebase demo-tunnel \
 	vendor community-phishlets desktop cli \
-	setup start check lint test test-unit test-integration test-integration-docker \
+	setup start check lint test test-unit test-python test-aitm \
+	test-integration test-integration-docker \
 	test-destinations docs docs-build \
 	campaign quick-test \
 	update-video-documentation update-video-documentation-desktop \
@@ -26,6 +27,7 @@ help:
 	@echo ""
 	@echo "Local demos (TypeScript practice apps):"
 	@echo "  make demo-cookie             Cookie-session mock on :9080"
+	@echo "  make demo-cookie-tls         Cookie app as HTTPS upstream (AiTM demo)"
 	@echo "  make demo-firebase           Firebase-shaped mock on :9081"
 	@echo "  make demo                    Start both demos"
 	@echo "  # see demos/ and demos/README.md"
@@ -72,6 +74,21 @@ help:
 # -----------------------------------------------------------------------------
 demo-cookie:
 	@(cd demos && npm install --silent && npm run demo:cookie)
+
+# Serve the cookie app as an HTTPS *upstream* on a host distinct from the lure,
+# so evilginx can proxy and capture a real session (audit C1.4). Pair with the
+# demo-cookie phishlet. Defaults to 127.0.0.2:443 (needs root/setcap for :443);
+# override HOST/PORT for an unprivileged run.
+#   TLS_HOST=127.0.0.2 TLS_PORT=443 make demo-cookie-tls
+demo-cookie-tls:
+	@TLS_HOST="$${TLS_HOST:-127.0.0.2}"; TLS_PORT="$${TLS_PORT:-443}"; \
+	./scripts/gen_demo_tls_cert.sh demos/.certs app.cookie-demo.test; \
+	echo "demo-cookie HTTPS upstream → https://$$TLS_HOST:$$TLS_PORT (CN=app.cookie-demo.test)"; \
+	(cd demos && npm install --silent); \
+	cd demos && HOST="$$TLS_HOST" PORT="$$TLS_PORT" \
+	  TLS_CERT="$(CURDIR)/demos/.certs/app.cookie-demo.test.crt" \
+	  TLS_KEY="$(CURDIR)/demos/.certs/app.cookie-demo.test.key" \
+	  npm run demo:cookie
 
 demo-firebase:
 	@(cd demos && npm install --silent && npm run demo:firebase)
@@ -162,15 +179,38 @@ setup:
 	@export PATH="$$HOME/.cargo/bin:$$PATH"; \
 	command -v cargo >/dev/null || { echo "cargo not found. Install Rust: https://rustup.rs (then restart the shell)"; exit 1; }; \
 	echo "==> desktop dependencies"; (cd apps/desktop && npm install); \
-	echo "==> docs dependencies"; npm install
+	echo "==> docs dependencies"; npm install; \
+	echo "==> python deps for the evilginx lure (pexpect in a managed venv)"; \
+	if [ ! -x venv/bin/python ]; then python3 -m venv venv; fi; \
+	./venv/bin/python -m pip install -q -r scripts/requirements.txt; \
+	echo "==> screen (required to run evilginx with a real TTY)"; \
+	if command -v screen >/dev/null; then \
+	  echo "    screen: $$(command -v screen)"; \
+	elif command -v apt-get >/dev/null; then \
+	  sudo apt-get install -y screen || echo "    could not auto-install screen — install it manually"; \
+	elif command -v brew >/dev/null; then \
+	  brew install screen || echo "    could not auto-install screen — install it manually"; \
+	else \
+	  echo "    screen not found — install it (apt-get install screen / brew install screen)"; \
+	fi
 
 # Run the supported desktop app.
 start: desktop
 
 # Fast quality gates for the native engine (mirrors CI).
-check: test-unit
+check: test-unit test-python
 
-test: test-unit
+test: test-unit test-python
+
+# Python unit tests for the evilginx lure launcher (stdlib unittest, no extra deps).
+test-python:
+	@echo "==> python unit tests"; \
+	python3 -m unittest discover -s tests/python -v
+
+# Unprivileged AiTM smoke test: stands up the HTTPS upstream and drives the
+# cookie login → session → dashboard flow (the capture surface evilginx proxies).
+test-aitm:
+	@bash tests/smoke/demo_cookie_e2e.sh
 
 test-unit:
 	@export PATH="$$HOME/.cargo/bin:$$PATH"; \
