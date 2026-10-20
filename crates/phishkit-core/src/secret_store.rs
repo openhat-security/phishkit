@@ -162,12 +162,9 @@ pub fn reseal_if_plaintext(stored: &str) -> AppResult<(String, bool)> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Mutex;
-
-    static LOCK: Mutex<()> = Mutex::new(());
 
     fn with_isolated_data<F: FnOnce()>(f: F) {
-        let _g = LOCK.lock().unwrap();
+        let _g = crate::test_lock::env_guard();
         let tmp = tempfile::tempdir().unwrap();
         let data = tmp.path().join("data");
         fs::create_dir_all(&data).unwrap();
