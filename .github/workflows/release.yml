@@ -1,5 +1,15 @@
 name: Release
 
+# Push a version tag (e.g. `git tag v0.1.1-alpha.2 && git push origin v0.1.1-alpha.2`)
+# and this workflow does the whole release end to end:
+#   1. builds the CLI archives (macOS arm64/x86_64, Linux x86_64),
+#   2. builds the desktop app .dmg (macOS arm64 + x86_64) with Tauri,
+#   3. publishes a GitHub Release for the tag with every artifact + checksum,
+#   4. opens a PR on openhat-security/homebrew-tap that bumps the version and
+#      sha256 in the `phishkit` cask and the `phishkit-cli` cask, so a plain
+#      `brew upgrade` picks the new build up once that PR lands.
+# Nothing here cuts a tag; tagging is the trigger.
+
 on:
   push:
     tags:
@@ -51,6 +61,71 @@ jobs:
           path: |
             dist/*.tar.gz
             dist/*.tar.gz.sha256
+
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+          - target: x86_64-apple-darwin
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Pin bundle version to the tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          VER="${GITHUB_REF_NAME#v}"
+          CONF=apps/desktop/src-tauri/tauri.conf.json
+          tmp=$(mktemp)
+          jq --arg v "$VER" '.version = $v' "$CONF" > "$tmp" && mv "$tmp" "$CONF"
+          # Keep package.json/Cargo.toml in step so Tauri reads one version everywhere.
+          npm --prefix apps/desktop version --no-git-tag-version --allow-same-version "$VER" || true
+      - name: Install frontend deps
+        run: npm --prefix apps/desktop ci || npm --prefix apps/desktop install
+      # The desktop app launches the vendored evilginx at runtime, so build it
+      # first with the repo's own target rather than reinventing the command.
+      - name: Build vendored evilginx
+        run: make build-evilginx
+      - name: Build desktop app (.dmg)
+        # Tauri reads the minisign updater key from the environment because the
+        # app ships `createUpdaterArtifacts: true`. Notarization is intentionally
+        # NOT done here — the .dmgs stay unsigned/unnotarized, matching the first
+        # hand-built release. Add Apple secrets + a notarize step later to change
+        # that.
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: npm --prefix apps/desktop run tauri build -- --target ${{ matrix.target }}
+      - name: Collect .dmg + updater artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          BUNDLE="apps/desktop/src-tauri/target/${{ matrix.target }}/release/bundle"
+          mkdir -p dist-desktop
+          # .dmg (installer) plus the updater bundle + its .sig, if present.
+          find "$BUNDLE" -type f \( -name '*.dmg' -o -name '*.app.tar.gz' -o -name '*.app.tar.gz.sig' \) \
+            -exec cp {} dist-desktop/ \;
+          cd dist-desktop
+          for f in *.dmg; do
+            [ -e "$f" ] || continue
+            shasum -a 256 "$f" > "$f.sha256"
+          done
+          ls -la
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.target }}
+          path: dist-desktop/*
 
   packaging:
     needs: cli
@@ -147,7 +222,7 @@ jobs:
           path: dist-packaging/*
 
   publish:
-    needs: [cli, packaging]
+    needs: [cli, desktop, packaging]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -164,18 +239,128 @@ jobs:
             **Alpha** (`${{ github.ref_name }}`) — primitive preview, not a beta, not production.
 
             We are still assembling and testing the product. Expect breaking changes.
-            Build from source. There is no signed installer.
+            The desktop `.dmg`s are **not** notarized, so macOS may warn on first launch.
 
             **Authorized security assessments only.** See [authorized use](https://github.com/${{ github.repository }}/blob/main/docs/guide/authorized-use.md).
 
-            - CLI archives + checksums attached
-            - Packaging stubs: `phishkit.rb` (Homebrew), `PKGBUILD` (AUR), `debian/`
+            - Desktop app `.dmg` (macOS arm64 + x86_64) + checksums
+            - CLI archives (macOS arm64/x86_64, Linux x86_64) + checksums
+            - Packaging stubs: `phishkit.rb` (Homebrew source formula), `PKGBUILD` (AUR), `debian/`
             - Walkthrough videos are **not** attached (too large for GitHub); generate locally
-            - Live tap/AUR/PPA publish requires maintainer secrets (see `packaging/README.md`)
+            - The Homebrew tap (`openhat-security/homebrew-tap`) is bumped by a follow-up PR this run opens
           files: |
             release-assets/*.tar.gz
             release-assets/*.tar.gz.sha256
+            release-assets/*.dmg
+            release-assets/*.dmg.sha256
+            release-assets/*.app.tar.gz
+            release-assets/*.app.tar.gz.sig
             release-assets/phishkit.rb
             release-assets/PKGBUILD
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  tap:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for tap token
+        id: gate
+        env:
+          TAP_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
+        run: |
+          if [ -z "${TAP_TOKEN:-}" ]; then
+            echo "TAP_GITHUB_TOKEN is not set — skipping the Homebrew tap bump." >&2
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Download release assets for checksums
+        if: steps.gate.outputs.ok == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+      - name: Check out the tap
+        if: steps.gate.outputs.ok == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: openhat-security/homebrew-tap
+          token: ${{ secrets.TAP_GITHUB_TOKEN }}
+          path: tap
+      - name: Bump cask version + sha256
+        if: steps.gate.outputs.ok == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          VER="${GITHUB_REF_NAME#v}"
+          export VER
+          export ASSETS="$GITHUB_WORKSPACE/release-assets"
+          python3 - <<'PY'
+          import os, re, hashlib, pathlib
+          ver = os.environ["VER"]
+          assets = pathlib.Path(os.environ["ASSETS"])
+
+          def sha(fname):
+              p = assets / fname
+              if not p.is_file():
+                  raise SystemExit(f"release asset missing, cannot bump tap: {fname}")
+              h = hashlib.sha256()
+              h.update(p.read_bytes())
+              return h.hexdigest()
+
+          def bump(path):
+              text = pathlib.Path(path).read_text()
+              # version "..." (first occurrence, top of the cask)
+              text, n = re.subn(r'(version\s+")[^"]+(")', rf'\g<1>{ver}\g<2>', text, count=1)
+              if n != 1:
+                  raise SystemExit(f"could not find version line in {path}")
+              lines = text.splitlines(keepends=True)
+              # For every url line, expand #{version} to get the asset filename, hash
+              # it, and rewrite the nearest preceding sha256 line in the same block.
+              last_sha_idx = None
+              for i, line in enumerate(lines):
+                  if re.search(r'^\s*sha256\s+"', line):
+                      last_sha_idx = i
+                  m = re.search(r'url\s+"([^"]+)"', line)
+                  if m and last_sha_idx is not None:
+                      url = m.group(1).replace('#{version}', ver)
+                      fname = url.rsplit('/', 1)[-1]
+                      digest = sha(fname)
+                      lines[last_sha_idx] = re.sub(
+                          r'(sha256\s+")[0-9a-f]*(")',
+                          rf'\g<1>{digest}\g<2>',
+                          lines[last_sha_idx],
+                      )
+                      last_sha_idx = None
+              pathlib.Path(path).write_text("".join(lines))
+              print(f"bumped {path} -> {ver}")
+
+          bump("tap/Casks/phishkit.rb")
+          bump("tap/Casks/phishkit-cli.rb")
+          PY
+      - name: Open tap PR
+        if: steps.gate.outputs.ok == 'true'
+        shell: bash
+        working-directory: tap
+        env:
+          GH_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          VER="${GITHUB_REF_NAME#v}"
+          BRANCH="release/phishkit-${VER}"
+          git config user.name "Adam Siwiec"
+          git config user.email "73085927+adamsiwiec1@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add Casks/phishkit.rb Casks/phishkit-cli.rb
+          if git diff --cached --quiet; then
+            echo "No cask changes for ${VER}; nothing to open."
+            exit 0
+          fi
+          git commit -m "phishkit ${VER}: bump cask version + sha256"
+          git push -u origin "$BRANCH"
+          gh pr create \
+            --title "phishkit ${VER}: bump cask version + sha256" \
+            --body "Automated bump from openhat-security/phishkit release \`${GITHUB_REF_NAME}\`. Updates the version, URLs, and sha256 for the \`phishkit\` and \`phishkit-cli\` casks so \`brew upgrade\` serves the new build." \
+            --base main \
+            --head "$BRANCH"
