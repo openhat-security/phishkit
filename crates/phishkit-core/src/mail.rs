@@ -30,6 +30,15 @@ pub struct MailSettings {
     pub region: String,
     /// Mailgun sending domain
     pub domain: String,
+    /// Lab/production SMTP security: "starttls" | "tls" | "plain".
+    /// Empty derives from `use_starttls` (true→starttls, false→tls). "plain" is
+    /// for local lab sinks that speak cleartext SMTP (H5).
+    #[serde(default)]
+    pub smtp_security: String,
+    /// When true, accept self-signed / private-CA certs on the SMTP relay (H5).
+    /// Default false — production stays fail-closed on unknown issuers.
+    #[serde(default)]
+    pub accept_invalid_certs: bool,
 }
 
 /// Named saved sender (multiple per method).
@@ -49,6 +58,10 @@ pub struct MailAccount {
     pub api_key: String,
     pub region: String,
     pub domain: String,
+    #[serde(default)]
+    pub smtp_security: String,
+    #[serde(default)]
+    pub accept_invalid_certs: bool,
     pub active: bool,
     pub created_at: String,
     pub updated_at: String,
@@ -67,6 +80,57 @@ pub fn mask_secret(s: &str) -> String {
 
 fn is_masked(s: &str) -> bool {
     s == SECRET_MASK || s.chars().all(|c| c == '•')
+}
+
+fn open_settings_secrets(mut s: MailSettings) -> AppResult<MailSettings> {
+    s.password = crate::secret_store::open(&s.password)?;
+    s.api_key = crate::secret_store::open(&s.api_key)?;
+    Ok(s)
+}
+
+fn seal_settings_secrets(mut s: MailSettings) -> AppResult<MailSettings> {
+    s.password = crate::secret_store::seal(&s.password)?;
+    s.api_key = crate::secret_store::seal(&s.api_key)?;
+    Ok(s)
+}
+
+/// Upgrade any legacy plaintext password/api_key rows to sealed form.
+fn migrate_seal_mail_secrets(conn: &rusqlite::Connection) -> AppResult<()> {
+    // smtp_settings singleton
+    let row: Option<(String, String)> = conn
+        .query_row(
+            "SELECT password, api_key FROM smtp_settings WHERE id = 1",
+            [],
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        )
+        .optional()?;
+    if let Some((pass, key)) = row {
+        let (pass2, c1) = crate::secret_store::reseal_if_plaintext(&pass)?;
+        let (key2, c2) = crate::secret_store::reseal_if_plaintext(&key)?;
+        if c1 || c2 {
+            conn.execute(
+                "UPDATE smtp_settings SET password = ?1, api_key = ?2 WHERE id = 1",
+                params![pass2, key2],
+            )?;
+        }
+    }
+    let mut stmt = conn.prepare("SELECT id, password, api_key FROM mail_accounts")?;
+    let rows: Vec<(String, String, String)> = stmt
+        .query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))?
+        .filter_map(|r| r.ok())
+        .collect();
+    drop(stmt);
+    for (id, pass, key) in rows {
+        let (pass2, c1) = crate::secret_store::reseal_if_plaintext(&pass)?;
+        let (key2, c2) = crate::secret_store::reseal_if_plaintext(&key)?;
+        if c1 || c2 {
+            conn.execute(
+                "UPDATE mail_accounts SET password = ?1, api_key = ?2 WHERE id = ?3",
+                params![pass2, key2, id],
+            )?;
+        }
+    }
+    Ok(())
 }
 
 fn redact_mail_settings(mut s: MailSettings) -> MailSettings {
@@ -97,6 +161,8 @@ pub struct UpsertMailAccount {
     pub api_key: Option<String>,
     pub region: Option<String>,
     pub domain: Option<String>,
+    pub smtp_security: Option<String>,
+    pub accept_invalid_certs: Option<bool>,
     /// If true (default), make this the active sender after save
     pub activate: Option<bool>,
 }
@@ -135,6 +201,8 @@ impl Default for MailSettings {
             api_key: String::new(),
             region: String::new(),
             domain: String::new(),
+            smtp_security: String::new(),
+            accept_invalid_certs: false,
         }
     }
 }
@@ -175,7 +243,25 @@ impl MailSettings {
                 self.port = 587;
             }
             self.use_starttls = true;
+            self.smtp_security = "starttls".into();
         }
+        // Resolve smtp_security. Empty inherits the legacy use_starttls flag so
+        // existing saved accounts keep working. Explicit "plain" unlocks lab sinks.
+        let sec = self.smtp_security.trim().to_ascii_lowercase();
+        self.smtp_security = match sec.as_str() {
+            "plain" | "none" | "off" | "cleartext" => "plain".into(),
+            "tls" | "ssl" | "wrapper" | "implicit" => "tls".into(),
+            "starttls" => "starttls".into(),
+            "" => {
+                if self.use_starttls {
+                    "starttls".into()
+                } else {
+                    "tls".into()
+                }
+            }
+            other => other.to_string(),
+        };
+        self.use_starttls = self.smtp_security == "starttls";
         self
     }
 
@@ -257,11 +343,12 @@ pub fn get_smtp_settings() -> AppResult<MailSettings> {
 }
 
 fn write_active_smtp(conn: &rusqlite::Connection, settings: &MailSettings) -> AppResult<()> {
+    let settings = seal_settings_secrets(settings.clone())?;
     let now = now_iso();
     conn.execute(
         "INSERT INTO smtp_settings(id, host, port, username, password, from_email, from_name,
-             use_starttls, provider, api_key, region, domain, updated_at)
-         VALUES(1, ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)
+             use_starttls, provider, api_key, region, domain, smtp_security, accept_invalid_certs, updated_at)
+         VALUES(1, ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)
          ON CONFLICT(id) DO UPDATE SET
            host=excluded.host,
            port=excluded.port,
@@ -274,6 +361,8 @@ fn write_active_smtp(conn: &rusqlite::Connection, settings: &MailSettings) -> Ap
            api_key=excluded.api_key,
            region=excluded.region,
            domain=excluded.domain,
+           smtp_security=excluded.smtp_security,
+           accept_invalid_certs=excluded.accept_invalid_certs,
            updated_at=excluded.updated_at",
         params![
             settings.host.trim(),
@@ -287,6 +376,8 @@ fn write_active_smtp(conn: &rusqlite::Connection, settings: &MailSettings) -> Ap
             settings.api_key,
             settings.region,
             settings.domain,
+            settings.smtp_security,
+            if settings.accept_invalid_certs { 1 } else { 0 },
             now,
         ],
     )?;
@@ -307,13 +398,17 @@ pub fn get_settings_for_account(id: &str) -> AppResult<Option<MailSettings>> {
         let row = conn
             .query_row(
                 "SELECT id, label, provider, host, port, username, password, from_email, from_name,
-                        use_starttls, api_key, region, domain
+                        use_starttls, api_key, region, domain,
+                        COALESCE(smtp_security, ''), COALESCE(accept_invalid_certs, 0)
                  FROM mail_accounts WHERE id = ?1",
                 params![id],
                 settings_from_account_row,
             )
             .optional()?;
-        Ok(row)
+        match row {
+            Some(s) => Ok(Some(open_settings_secrets(s)?)),
+            None => Ok(None),
+        }
     })
 }
 
@@ -339,6 +434,8 @@ fn settings_from_account_row(r: &rusqlite::Row<'_>) -> rusqlite::Result<MailSett
         api_key: r.get(10)?,
         region: r.get(11)?,
         domain: r.get(12)?,
+        smtp_security: r.get::<_, String>(13).unwrap_or_default(),
+        accept_invalid_certs: r.get::<_, i64>(14).unwrap_or(0) != 0,
     }
     .normalize())
 }
@@ -369,6 +466,8 @@ fn migrate_legacy_smtp_to_accounts(conn: &rusqlite::Connection) -> AppResult<()>
                 api_key: r.get(8)?,
                 region: r.get(9)?,
                 domain: r.get(10)?,
+                smtp_security: String::new(),
+                accept_invalid_certs: false,
             })
         },
     );
@@ -378,7 +477,7 @@ fn migrate_legacy_smtp_to_accounts(conn: &rusqlite::Connection) -> AppResult<()>
     if s.from_email.trim().is_empty() && s.username.trim().is_empty() && s.password.is_empty() {
         return Ok(());
     }
-    let s = s.normalize();
+    let s = seal_settings_secrets(s.normalize())?;
     let id = uuid::Uuid::new_v4().to_string();
     let now = now_iso();
     let label = if !s.from_email.is_empty() {
@@ -388,8 +487,9 @@ fn migrate_legacy_smtp_to_accounts(conn: &rusqlite::Connection) -> AppResult<()>
     };
     conn.execute(
         "INSERT INTO mail_accounts(id, label, provider, host, port, username, password,
-             from_email, from_name, use_starttls, api_key, region, domain, created_at, updated_at)
-         VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?14)",
+             from_email, from_name, use_starttls, api_key, region, domain,
+             smtp_security, accept_invalid_certs, created_at, updated_at)
+         VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?16)",
         params![
             id,
             label,
@@ -404,6 +504,8 @@ fn migrate_legacy_smtp_to_accounts(conn: &rusqlite::Connection) -> AppResult<()>
             s.api_key,
             s.region,
             s.domain,
+            s.smtp_security,
+            if s.accept_invalid_certs { 1 } else { 0 },
             now,
         ],
     )?;
@@ -417,22 +519,24 @@ fn migrate_legacy_smtp_to_accounts(conn: &rusqlite::Connection) -> AppResult<()>
 pub fn get_mail_settings() -> AppResult<MailSettings> {
     with_db(|conn| {
         migrate_legacy_smtp_to_accounts(conn)?;
+        migrate_seal_mail_secrets(conn)?;
         if let Some(aid) = active_account_id(conn) {
             let row = conn.query_row(
                 "SELECT id, label, provider, host, port, username, password, from_email, from_name,
-                        use_starttls, api_key, region, domain
+                        use_starttls, api_key, region, domain,
+                        COALESCE(smtp_security, ''), COALESCE(accept_invalid_certs, 0)
                  FROM mail_accounts WHERE id = ?1",
                 params![aid],
                 settings_from_account_row,
             );
             if let Ok(s) = row {
-                return Ok(s);
+                return open_settings_secrets(s);
             }
         }
         let row = conn.query_row(
             "SELECT host, port, username, password, from_email, from_name, use_starttls,
                     COALESCE(provider, 'smtp'), COALESCE(api_key, ''), COALESCE(region, ''),
-                    COALESCE(domain, '')
+                    COALESCE(domain, ''), COALESCE(smtp_security, ''), COALESCE(accept_invalid_certs, 0)
              FROM smtp_settings WHERE id = 1",
             [],
             |r| {
@@ -448,10 +552,12 @@ pub fn get_mail_settings() -> AppResult<MailSettings> {
                     api_key: r.get(8)?,
                     region: r.get(9)?,
                     domain: r.get(10)?,
+                    smtp_security: r.get::<_, String>(11).unwrap_or_default(),
+                    accept_invalid_certs: r.get::<_, i64>(12).unwrap_or(0) != 0,
                 })
             },
         );
-        Ok(row.unwrap_or_default().normalize())
+        open_settings_secrets(row.unwrap_or_default().normalize())
     })
 }
 
@@ -481,6 +587,8 @@ pub fn save_mail_settings(settings: MailSettings) -> AppResult<MailSettings> {
         api_key: Some(settings.api_key.clone()),
         region: Some(settings.region.clone()),
         domain: Some(settings.domain.clone()),
+        smtp_security: Some(settings.smtp_security.clone()),
+        accept_invalid_certs: Some(settings.accept_invalid_certs),
         activate: Some(true),
     };
     // Reuse existing active account id if same provider+from
@@ -502,10 +610,13 @@ pub fn save_mail_settings(settings: MailSettings) -> AppResult<MailSettings> {
 pub fn list_mail_accounts() -> AppResult<Vec<MailAccount>> {
     with_db(|conn| {
         migrate_legacy_smtp_to_accounts(conn)?;
+        migrate_seal_mail_secrets(conn)?;
         let active = active_account_id(conn).unwrap_or_default();
         let mut stmt = conn.prepare(
             "SELECT id, label, provider, host, port, username, password, from_email, from_name,
-                    use_starttls, api_key, region, domain, created_at, updated_at
+                    use_starttls, api_key, region, domain,
+                    COALESCE(smtp_security, ''), COALESCE(accept_invalid_certs, 0),
+                    created_at, updated_at
              FROM mail_accounts ORDER BY updated_at DESC",
         )?;
         let rows = stmt.query_map([], |r| {
@@ -524,9 +635,11 @@ pub fn list_mail_accounts() -> AppResult<Vec<MailAccount>> {
                 api_key: r.get(10)?,
                 region: r.get(11)?,
                 domain: r.get(12)?,
+                smtp_security: r.get::<_, String>(13).unwrap_or_default(),
+                accept_invalid_certs: r.get::<_, i64>(14).unwrap_or(0) != 0,
                 active: id == active,
-                created_at: r.get(13)?,
-                updated_at: r.get(14)?,
+                created_at: r.get(15)?,
+                updated_at: r.get(16)?,
             })
         })?;
         Ok(rows
@@ -549,6 +662,8 @@ pub fn upsert_mail_account(req: UpsertMailAccount) -> AppResult<MailAccount> {
         api_key: req.api_key.unwrap_or_default(),
         region: req.region.unwrap_or_default(),
         domain: req.domain.unwrap_or_default(),
+        smtp_security: req.smtp_security.unwrap_or_default(),
+        accept_invalid_certs: req.accept_invalid_certs.unwrap_or(false),
     }
     .normalize();
     if settings.provider == "gmail" && settings.username.is_empty() {
@@ -596,6 +711,7 @@ pub fn upsert_mail_account(req: UpsertMailAccount) -> AppResult<MailAccount> {
 
     with_db(|conn| {
         migrate_legacy_smtp_to_accounts(conn)?;
+        migrate_seal_mail_secrets(conn)?;
         // Preserve secrets if updating and new values are empty
         let existing: Option<(String, String)> = conn
             .query_row(
@@ -605,6 +721,7 @@ pub fn upsert_mail_account(req: UpsertMailAccount) -> AppResult<MailAccount> {
             )
             .ok();
         if let Some((pass, key)) = existing {
+            // Keep the stored (possibly already sealed) secret when the UI sent empty/mask.
             if settings.password.is_empty() {
                 settings.password = pass;
             }
@@ -612,6 +729,8 @@ pub fn upsert_mail_account(req: UpsertMailAccount) -> AppResult<MailAccount> {
                 settings.api_key = key;
             }
         }
+        // Seal plaintext secrets before they touch the DB. Already-sealed values pass through.
+        settings = seal_settings_secrets(settings)?;
         let created: String = conn
             .query_row(
                 "SELECT created_at FROM mail_accounts WHERE id = ?1",
@@ -621,8 +740,9 @@ pub fn upsert_mail_account(req: UpsertMailAccount) -> AppResult<MailAccount> {
             .unwrap_or_else(|_| now.clone());
         conn.execute(
             "INSERT INTO mail_accounts(id, label, provider, host, port, username, password,
-                 from_email, from_name, use_starttls, api_key, region, domain, created_at, updated_at)
-             VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15)
+                 from_email, from_name, use_starttls, api_key, region, domain,
+                 smtp_security, accept_invalid_certs, created_at, updated_at)
+             VALUES(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17)
              ON CONFLICT(id) DO UPDATE SET
                label=excluded.label,
                provider=excluded.provider,
@@ -636,6 +756,8 @@ pub fn upsert_mail_account(req: UpsertMailAccount) -> AppResult<MailAccount> {
                api_key=excluded.api_key,
                region=excluded.region,
                domain=excluded.domain,
+               smtp_security=excluded.smtp_security,
+               accept_invalid_certs=excluded.accept_invalid_certs,
                updated_at=excluded.updated_at",
             params![
                 id,
@@ -651,6 +773,8 @@ pub fn upsert_mail_account(req: UpsertMailAccount) -> AppResult<MailAccount> {
                 settings.api_key,
                 settings.region,
                 settings.domain,
+                settings.smtp_security,
+                if settings.accept_invalid_certs { 1 } else { 0 },
                 created,
                 now,
             ],
@@ -675,7 +799,8 @@ pub fn activate_mail_account(id: String) -> AppResult<MailAccount> {
     with_db(|conn| {
         let settings = conn.query_row(
             "SELECT id, label, provider, host, port, username, password, from_email, from_name,
-                    use_starttls, api_key, region, domain
+                    use_starttls, api_key, region, domain,
+                    COALESCE(smtp_security, ''), COALESCE(accept_invalid_certs, 0)
              FROM mail_accounts WHERE id = ?1",
             params![id],
             settings_from_account_row,
@@ -710,7 +835,8 @@ pub fn delete_mail_account(id: String) -> AppResult<()> {
             if let Some(nid) = next {
                 let settings = conn.query_row(
                     "SELECT id, label, provider, host, port, username, password, from_email, from_name,
-                            use_starttls, api_key, region, domain
+                            use_starttls, api_key, region, domain,
+                            COALESCE(smtp_security, ''), COALESCE(accept_invalid_certs, 0)
                      FROM mail_accounts WHERE id = ?1",
                     params![nid],
                     settings_from_account_row,
@@ -830,21 +956,78 @@ fn extract_html_from_parsed(mail: &mailparse::ParsedMail<'_>) -> Option<String> 
     None
 }
 
+/// How the SMTP client should speak TLS (testable without opening a socket).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SmtpSecurityMode {
+    /// STARTTLS upgrade (submission, port 587).
+    StartTls,
+    /// Implicit TLS wrapper (SMTPS, port 465).
+    ImplicitTls,
+    /// Cleartext SMTP — lab sinks only (H5).
+    Plain,
+}
+
+/// Resolve the effective SMTP security mode after normalize().
+pub fn smtp_security_mode(settings: &MailSettings) -> SmtpSecurityMode {
+    match settings.smtp_security.as_str() {
+        "plain" => SmtpSecurityMode::Plain,
+        "tls" => SmtpSecurityMode::ImplicitTls,
+        _ => SmtpSecurityMode::StartTls,
+    }
+}
+
+fn smtp_tls_parameters(
+    host: &str,
+    accept_invalid: bool,
+) -> AppResult<lettre::transport::smtp::client::TlsParameters> {
+    use lettre::transport::smtp::client::{Certificate, TlsParameters};
+    let mut builder = TlsParameters::builder(host.to_string());
+    if accept_invalid {
+        builder = builder
+            .dangerous_accept_invalid_certs(true)
+            .dangerous_accept_invalid_hostnames(true);
+    }
+    // Optional custom CA for private lab PKI (PEM file path).
+    if let Ok(path) = std::env::var("PHISHKIT_SMTP_CA_FILE") {
+        let path = path.trim();
+        if !path.is_empty() {
+            let pem = std::fs::read(path).map_err(|e| {
+                AppError::msg(format!("PHISHKIT_SMTP_CA_FILE read failed ({path}): {e}"))
+            })?;
+            let cert = Certificate::from_pem(&pem).map_err(|e| {
+                AppError::msg(format!(
+                    "PHISHKIT_SMTP_CA_FILE is not a valid PEM cert: {e}"
+                ))
+            })?;
+            builder = builder.add_root_certificate(cert);
+        }
+    }
+    builder
+        .build()
+        .map_err(|e| AppError::msg(format!("SMTP TLS parameters: {e}")))
+}
+
 fn build_transport(settings: &MailSettings) -> AppResult<SmtpTransport> {
+    use lettre::transport::smtp::client::Tls;
     if settings.host.trim().is_empty() {
         return Err(AppError::msg("SMTP host is required"));
     }
     if settings.from_email.trim().is_empty() {
         return Err(AppError::msg("From email is required"));
     }
-    let mut builder = if settings.use_starttls {
-        SmtpTransport::starttls_relay(&settings.host)
-            .map_err(|e| AppError::msg(format!("SMTP relay: {e}")))?
-            .port(settings.port)
-    } else {
-        SmtpTransport::relay(&settings.host)
-            .map_err(|e| AppError::msg(format!("SMTP relay: {e}")))?
-            .port(settings.port)
+    let host = settings.host.trim();
+    let mode = smtp_security_mode(settings);
+    let mut builder = SmtpTransport::builder_dangerous(host).port(settings.port);
+    builder = match mode {
+        SmtpSecurityMode::Plain => builder.tls(Tls::None),
+        SmtpSecurityMode::StartTls => {
+            let params = smtp_tls_parameters(host, settings.accept_invalid_certs)?;
+            builder.tls(Tls::Required(params))
+        }
+        SmtpSecurityMode::ImplicitTls => {
+            let params = smtp_tls_parameters(host, settings.accept_invalid_certs)?;
+            builder.tls(Tls::Wrapper(params))
+        }
     };
     if !settings.username.is_empty() {
         builder = builder.credentials(Credentials::new(
@@ -928,6 +1111,10 @@ pub fn send_message(
 }
 
 pub fn send_test(to: String) -> AppResult<SendReceipt> {
+    // Enforce the acceptable-use gate on the test path too (H4). The production
+    // campaign send paths already call this; without it here the "test" send is a
+    // hole that delivers real mail without the operator accepting the policy.
+    crate::aup::require_aup()?;
     let settings = get_mail_settings()?;
     send_message(
         &settings,
@@ -1297,5 +1484,92 @@ mod tests {
         vars.insert("link".into(), "https://lure.test".into());
         let out = merge_tags("Hi {{ first_name }}, click {{link}} {{missing}}", &vars);
         assert_eq!(out, "Hi Ada, click https://lure.test {{missing}}");
+    }
+}
+
+#[cfg(test)]
+mod smtp_security_tests {
+    use super::*;
+
+    fn base() -> MailSettings {
+        MailSettings {
+            provider: "smtp".into(),
+            host: "smtp.lab.test".into(),
+            port: 2525,
+            username: String::new(),
+            password: String::new(),
+            from_email: "ops@lab.test".into(),
+            from_name: "Ops".into(),
+            use_starttls: true,
+            api_key: String::new(),
+            region: String::new(),
+            domain: String::new(),
+            smtp_security: String::new(),
+            accept_invalid_certs: false,
+        }
+    }
+
+    #[test]
+    fn empty_security_inherits_use_starttls() {
+        let mut s = base();
+        s.use_starttls = true;
+        s.smtp_security.clear();
+        let s = s.normalize();
+        assert_eq!(s.smtp_security, "starttls");
+        assert_eq!(smtp_security_mode(&s), SmtpSecurityMode::StartTls);
+
+        let mut s = base();
+        s.use_starttls = false;
+        s.smtp_security.clear();
+        let s = s.normalize();
+        assert_eq!(s.smtp_security, "tls");
+        assert_eq!(smtp_security_mode(&s), SmtpSecurityMode::ImplicitTls);
+    }
+
+    #[test]
+    fn plain_mode_is_explicit_and_not_the_default() {
+        let mut s = base();
+        s.smtp_security = "plain".into();
+        let s = s.normalize();
+        assert_eq!(smtp_security_mode(&s), SmtpSecurityMode::Plain);
+        // Default path must not silently become plain
+        let d = MailSettings::default().normalize();
+        assert_ne!(smtp_security_mode(&d), SmtpSecurityMode::Plain);
+        assert_eq!(smtp_security_mode(&d), SmtpSecurityMode::StartTls);
+    }
+
+    #[test]
+    fn aliases_normalize_to_canonical_modes() {
+        for (raw, want) in [
+            ("none", SmtpSecurityMode::Plain),
+            ("cleartext", SmtpSecurityMode::Plain),
+            ("ssl", SmtpSecurityMode::ImplicitTls),
+            ("wrapper", SmtpSecurityMode::ImplicitTls),
+            ("starttls", SmtpSecurityMode::StartTls),
+        ] {
+            let mut s = base();
+            s.smtp_security = raw.into();
+            let s = s.normalize();
+            assert_eq!(smtp_security_mode(&s), want, "raw={raw}");
+        }
+    }
+
+    #[test]
+    fn build_transport_accepts_plain_lab_sink_config() {
+        let mut s = base();
+        s.smtp_security = "plain".into();
+        s.port = 2525;
+        let s = s.normalize();
+        // Must construct without error (no socket opened until send).
+        build_transport(&s).expect("plain transport should build");
+    }
+
+    #[test]
+    fn accept_invalid_certs_still_builds_starttls_transport() {
+        let mut s = base();
+        s.smtp_security = "starttls".into();
+        s.accept_invalid_certs = true;
+        let s = s.normalize();
+        build_transport(&s).expect("starttls+accept_invalid should build");
     }
 }

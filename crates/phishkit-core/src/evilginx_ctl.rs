@@ -156,10 +156,16 @@ pub fn start_with_lure(
     }
 
     if !out.status.success() && lure.is_empty() {
+        // Tear down any detached screen session / half-bound port the failed start
+        // left behind, so a retry starts clean (audit L1).
+        let _ = stop_evilginx();
         return Err(AppError::msg(format!(
             "evilginx start failed:\n{combined}\n\
-             Tip: the HTTPS port may be in use or need privileges (local dry-runs \
-             default to unprivileged 8443); check Advanced → Tail evilginx log."
+             Tip: local dry-runs default to the unprivileged 8443, so the HTTPS \
+             port may just be in use; privileged ports (:443/:53) instead need \
+             root/setcap, or set PHISHKIT_HTTPS_PORT/PHISHKIT_DNS_PORT (or the \
+             EVILGINX_* equivalents) to high ports. Check Advanced → Tail evilginx \
+             log, or screen -r phishkit-evilginx."
         )));
     }
 

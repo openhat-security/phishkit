@@ -4,6 +4,55 @@ All notable changes to phishkit are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.1.1-alpha.1] - 2026-10-19
+
+### Fixed
+
+- AiTM cookie demo now runs end to end. The `demo-cookie` phishlet proxies to a
+  reachable HTTPS upstream (`app.cookie-demo.test`) that is distinct from the lure
+  host, so evilginx no longer dials its own hostname and loops.
+- The lure launcher's bind poll no longer reports a false negative. It probes the
+  configured HTTPS port with a socket connect (with `ss`/`lsof` as a fallback),
+  re-checks once after the process is confirmed up, and binds the port read from
+  the config instead of a hard-coded `443`.
+- A failed lure start tears down its `screen` session and any half-bound port
+  instead of leaving them running.
+- `ensure-destination` reuses an existing phishlet that already serves the same
+  landing host rather than scaffolding a duplicate that collides at load time.
+- `upstream_domain` handles single-label internal hosts and compound public
+  suffixes (`co.uk`, `github.io`, and similar) instead of always stripping the
+  left label.
+
+- SMTP passwords and API keys are sealed at rest (ChaCha20-Poly1305 under a
+  local `master.key`), not left as plaintext in SQLite.
+- The SQLite store and its data directory are forced to `0600` / `0700` on every
+  open, including after a loose restore.
+- Recon/`detect` verifies TLS by default and refuses loopback, RFC1918,
+  link-local, CGNAT, and ULA targets unless `PHISHKIT_RECON_ALLOW_PRIVATE=1`.
+- The delivery-test send path goes through the same AUP gate as campaign sends.
+- Lab SMTP can speak cleartext (`smtp_security=plain`) or accept a private/self-
+  signed relay cert (`accept_invalid_certs`), plus optional `PHISHKIT_SMTP_CA_FILE`.
+
+### Added
+
+- `make demo-cookie-tls` — serves the cookie app as an HTTPS upstream for the
+  AiTM dry-run (self-signed cert under `demos/.certs/`).
+- `EVILGINX_HTTPS_PORT` / `EVILGINX_DNS_PORT` — run the lure on unprivileged high
+  ports without root.
+- `tests/python/` — unit tests for the lure launcher (port selection, bind poll,
+  config and lure-path logic).
+- `tests/smoke/demo_cookie_e2e.sh` (`make test-aitm`) — unprivileged smoke test of
+  the HTTPS upstream and cookie capture surface.
+- `tests/smoke/aitm_e2e_sudo.sh` — full proxy loop through evilginx for a lab box.
+- CI job that runs the Python unit tests and the AiTM smoke test.
+
+### Changed
+
+- `make setup` installs `pexpect` into a managed `venv/` and checks for `screen`.
+- [Walkthrough](docs/guide/walkthrough.md) documents the AiTM demo end to end.
+
 ## [0.1.0] - 2026-08-14
 
 **Alpha.** First tagged cut — primitive, not a beta, not production. We are

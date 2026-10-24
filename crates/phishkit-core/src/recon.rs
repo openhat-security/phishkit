@@ -1,3 +1,6 @@
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, ToSocketAddrs};
+use std::sync::Arc;
+
 use regex::Regex;
 use serde::Serialize;
 
@@ -27,6 +30,235 @@ pub struct ReconResult {
     pub upstream_domain: String,
     pub stack_info: StackInfo,
     pub error: Option<String>,
+}
+
+/// Opt-in: allow recon against loopback / RFC1918 / link-local / ULA.
+/// Set `PHISHKIT_RECON_ALLOW_PRIVATE=1` for lab demos that deliberately target
+/// 127.0.0.1 or a private staging host. Default is fail-closed (block).
+fn recon_allow_private() -> bool {
+    matches!(
+        std::env::var("PHISHKIT_RECON_ALLOW_PRIVATE").as_deref(),
+        Ok("1") | Ok("true") | Ok("TRUE") | Ok("yes") | Ok("YES")
+    )
+}
+
+/// Opt-in: skip TLS certificate verification for recon fetches.
+/// Default is verify. Only for lab targets with self-signed certs.
+fn recon_insecure_tls() -> bool {
+    matches!(
+        std::env::var("PHISHKIT_RECON_INSECURE_TLS").as_deref(),
+        Ok("1") | Ok("true") | Ok("TRUE") | Ok("yes") | Ok("YES")
+    )
+}
+
+/// True if this IPv4 address is not a safe default recon target.
+pub fn is_blocked_ipv4(ip: Ipv4Addr) -> bool {
+    if ip.is_unspecified()
+        || ip.is_loopback()
+        || ip.is_private()
+        || ip.is_link_local()
+        || ip.is_broadcast()
+        || ip.is_multicast()
+    {
+        return true;
+    }
+    // CGNAT / shared address space (RFC 6598)
+    let octets = ip.octets();
+    if octets[0] == 100 && (octets[1] & 0xc0) == 64 {
+        return true;
+    }
+    // IETF protocol assignments / documentation (RFC 5737, RFC 2544-ish)
+    if octets[0] == 192 && octets[1] == 0 && octets[2] == 0 {
+        return true;
+    }
+    if octets[0] == 192 && octets[1] == 0 && octets[2] == 2 {
+        return true;
+    }
+    if octets[0] == 198 && (octets[1] == 18 || octets[1] == 19) {
+        return true;
+    }
+    if octets[0] == 198 && octets[1] == 51 && octets[2] == 100 {
+        return true;
+    }
+    if octets[0] == 203 && octets[1] == 0 && octets[2] == 113 {
+        return true;
+    }
+    // "This network" 0.0.0.0/8 already covered by unspecified for 0.0.0.0;
+    // also block the rest of 0/8.
+    if octets[0] == 0 {
+        return true;
+    }
+    false
+}
+
+/// True if this IPv6 address is not a safe default recon target.
+pub fn is_blocked_ipv6(ip: Ipv6Addr) -> bool {
+    if ip.is_unspecified() || ip.is_loopback() || ip.is_multicast() {
+        return true;
+    }
+    // IPv4-mapped: apply the IPv4 rules to the embedded address.
+    if let Some(v4) = ip.to_ipv4_mapped() {
+        return is_blocked_ipv4(v4);
+    }
+    let segments = ip.segments();
+    // Link-local fe80::/10
+    if (segments[0] & 0xffc0) == 0xfe80 {
+        return true;
+    }
+    // Unique local fc00::/7
+    if (segments[0] & 0xfe00) == 0xfc00 {
+        return true;
+    }
+    // Site-local deprecated fec0::/10
+    if (segments[0] & 0xffc0) == 0xfec0 {
+        return true;
+    }
+    false
+}
+
+pub fn is_blocked_ip(ip: IpAddr) -> bool {
+    match ip {
+        IpAddr::V4(v4) => is_blocked_ipv4(v4),
+        IpAddr::V6(v6) => is_blocked_ipv6(v6),
+    }
+}
+
+/// Hostnames that must never be probed without an explicit private allow.
+fn is_blocked_hostname(host: &str) -> bool {
+    let h = host.trim().trim_end_matches('.').to_ascii_lowercase();
+    matches!(
+        h.as_str(),
+        "localhost"
+            | "localhost.localdomain"
+            | "ip6-localhost"
+            | "ip6-loopback"
+            | "metadata.google.internal"
+            | "metadata"
+    ) || h.ends_with(".localhost")
+        || h.ends_with(".localdomain")
+        || h == "0"
+}
+
+/// Resolve `host` and refuse if any answer is a blocked IP, or if the host
+/// itself is a blocked name / IP literal. When `allow_private` is set the
+/// check is a no-op (lab opt-in).
+pub fn assert_host_allowed(host: &str, allow_private: bool) -> AppResult<()> {
+    if allow_private {
+        return Ok(());
+    }
+    let host = host.trim().trim_end_matches('.');
+    if host.is_empty() {
+        return Err(AppError::msg("Empty host is not allowed for recon"));
+    }
+    if is_blocked_hostname(host) {
+        return Err(AppError::msg(format!(
+            "Refusing recon against blocked host `{host}` (loopback/metadata). Set PHISHKIT_RECON_ALLOW_PRIVATE=1 for lab targets."
+        )));
+    }
+    // IP literal?
+    if let Ok(ip) = host.parse::<IpAddr>() {
+        if is_blocked_ip(ip) {
+            return Err(AppError::msg(format!(
+                "Refusing recon against blocked address `{ip}` (loopback/private/link-local/ULA). Set PHISHKIT_RECON_ALLOW_PRIVATE=1 for lab targets."
+            )));
+        }
+        return Ok(());
+    }
+    // Bracketed IPv6 literal without port (url crate may pass without brackets)
+    let bare = host.trim_start_matches('[').trim_end_matches(']');
+    if let Ok(ip) = bare.parse::<IpAddr>() {
+        if is_blocked_ip(ip) {
+            return Err(AppError::msg(format!(
+                "Refusing recon against blocked address `{ip}` (loopback/private/link-local/ULA). Set PHISHKIT_RECON_ALLOW_PRIVATE=1 for lab targets."
+            )));
+        }
+        return Ok(());
+    }
+
+    // DNS resolve and check every answer. Fail closed on resolve errors only when
+    // we can prove a blocked answer; a total resolve failure is left to the HTTP
+    // client (surface as a fetch error), but any blocked answer refuses the fetch.
+    let lookup = format!("{host}:443");
+    match lookup.to_socket_addrs() {
+        Ok(addrs) => {
+            let mut saw_any = false;
+            for addr in addrs {
+                saw_any = true;
+                if is_blocked_ip(addr.ip()) {
+                    return Err(AppError::msg(format!(
+                        "Refusing recon against `{host}`: resolves to blocked address {} (loopback/private/link-local/ULA). Set PHISHKIT_RECON_ALLOW_PRIVATE=1 for lab targets.",
+                        addr.ip()
+                    )));
+                }
+            }
+            if !saw_any {
+                return Err(AppError::msg(format!(
+                    "Refusing recon against `{host}`: DNS returned no addresses"
+                )));
+            }
+            Ok(())
+        }
+        Err(e) => {
+            // Do not silently probe an unresolvable name through a weird path;
+            // surface a clear error (fail closed on the guard itself).
+            Err(AppError::msg(format!(
+                "Refusing recon against `{host}`: DNS resolve failed ({e})"
+            )))
+        }
+    }
+}
+
+/// Parse a URL (or host) and refuse if the authority is blocked.
+pub fn assert_fetch_url_allowed(url_or_host: &str, allow_private: bool) -> AppResult<()> {
+    let raw = url_or_host.trim();
+    if raw.is_empty() {
+        return Err(AppError::msg("Empty URL is not allowed for recon"));
+    }
+    let to_parse = if raw.contains("://") {
+        raw.to_string()
+    } else if raw.starts_with("//") {
+        format!("https:{raw}")
+    } else {
+        format!("https://{raw}")
+    };
+    let parsed = url::Url::parse(&to_parse)
+        .map_err(|e| AppError::msg(format!("Refusing recon: invalid URL `{raw}` ({e})")))?;
+    match parsed.scheme() {
+        "http" | "https" => {}
+        other => {
+            return Err(AppError::msg(format!(
+                "Refusing recon: scheme `{other}` is not allowed (http/https only)"
+            )));
+        }
+    }
+    let host = parsed
+        .host_str()
+        .ok_or_else(|| AppError::msg("Refusing recon: URL has no host"))?;
+    assert_host_allowed(host, allow_private)
+}
+
+fn build_recon_client(
+    allow_private: bool,
+    insecure_tls: bool,
+) -> AppResult<reqwest::blocking::Client> {
+    let allow_private = Arc::new(allow_private);
+    let mut builder = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(20))
+        .user_agent("phishkit-desktop/0.1 (authorized-assessment-recon)")
+        .redirect(reqwest::redirect::Policy::custom(move |attempt| {
+            if attempt.previous().len() >= 5 {
+                return attempt.error("too many redirects");
+            }
+            let url = attempt.url().as_str();
+            if let Err(e) = assert_fetch_url_allowed(url, *allow_private) {
+                return attempt.error(e.to_string());
+            }
+            attempt.follow()
+        }));
+    if insecure_tls {
+        builder = builder.danger_accept_invalid_certs(true);
+    }
+    Ok(builder.build()?)
 }
 
 const MARKERS: &[(&str, &str, &str, i32)] = &[
@@ -259,12 +491,12 @@ pub fn detect_target(url_or_host: &str) -> AppResult<ReconResult> {
         format!("https://{host}")
     };
 
-    let client = reqwest::blocking::Client::builder()
-        .timeout(std::time::Duration::from_secs(20))
-        .danger_accept_invalid_certs(true)
-        .user_agent("phishkit-desktop/0.1 (authorized-assessment-recon)")
-        .redirect(reqwest::redirect::Policy::limited(5))
-        .build()?;
+    let allow_private = recon_allow_private();
+    let insecure_tls = recon_insecure_tls();
+    // Fail closed on the operator-supplied target before any HTTP happens.
+    assert_host_allowed(&host, allow_private)?;
+    assert_fetch_url_allowed(&base, allow_private)?;
+    let client = build_recon_client(allow_private, insecure_tls)?;
 
     let mut corpus = String::new();
     let mut header_blob = String::new();
@@ -275,6 +507,12 @@ pub fn detect_target(url_or_host: &str) -> AppResult<ReconResult> {
 
     let mut assets: Vec<String> = Vec::new();
     for page in &pages {
+        if let Err(e) = assert_fetch_url_allowed(page, allow_private) {
+            if error.is_none() {
+                error = Some(e.to_string());
+            }
+            continue;
+        }
         match client.get(page).send() {
             Ok(resp) => {
                 for (k, v) in resp.headers().iter() {
@@ -332,6 +570,10 @@ pub fn detect_target(url_or_host: &str) -> AppResult<ReconResult> {
             break;
         };
         seen.insert(abs.clone());
+        // Re-check every asset URL (may point off-host after HTML parsing).
+        if assert_fetch_url_allowed(&abs, allow_private).is_err() {
+            continue;
+        }
         let Ok(r) = client.get(&abs).send() else {
             continue;
         };
@@ -516,4 +758,101 @@ fn assess_suitability(
         });
     }
     (suitability, notes)
+}
+
+#[cfg(test)]
+mod ssrf_tests {
+    use super::*;
+    use std::net::{Ipv4Addr, Ipv6Addr};
+
+    #[test]
+    fn blocks_loopback_rfc1918_link_local_cgnat() {
+        assert!(is_blocked_ipv4(Ipv4Addr::new(127, 0, 0, 1)));
+        assert!(is_blocked_ipv4(Ipv4Addr::new(127, 255, 255, 255)));
+        assert!(is_blocked_ipv4(Ipv4Addr::new(10, 0, 0, 1)));
+        assert!(is_blocked_ipv4(Ipv4Addr::new(172, 16, 0, 1)));
+        assert!(is_blocked_ipv4(Ipv4Addr::new(172, 31, 255, 255)));
+        assert!(!is_blocked_ipv4(Ipv4Addr::new(172, 32, 0, 1)));
+        assert!(is_blocked_ipv4(Ipv4Addr::new(192, 168, 1, 1)));
+        assert!(is_blocked_ipv4(Ipv4Addr::new(169, 254, 169, 254))); // cloud metadata
+        assert!(is_blocked_ipv4(Ipv4Addr::new(169, 254, 1, 1)));
+        assert!(is_blocked_ipv4(Ipv4Addr::new(100, 64, 0, 1))); // CGNAT
+        assert!(is_blocked_ipv4(Ipv4Addr::new(0, 0, 0, 0)));
+        assert!(is_blocked_ipv4(Ipv4Addr::BROADCAST));
+        // Public-looking addresses stay allowed
+        assert!(!is_blocked_ipv4(Ipv4Addr::new(1, 1, 1, 1)));
+        assert!(!is_blocked_ipv4(Ipv4Addr::new(8, 8, 8, 8)));
+        assert!(!is_blocked_ipv4(Ipv4Addr::new(93, 184, 216, 34)));
+    }
+
+    #[test]
+    fn blocks_ipv6_loopback_ula_link_local_and_mapped() {
+        assert!(is_blocked_ipv6(Ipv6Addr::LOCALHOST));
+        assert!(is_blocked_ipv6(Ipv6Addr::UNSPECIFIED));
+        assert!(is_blocked_ipv6("fc00::1".parse().unwrap()));
+        assert!(is_blocked_ipv6("fd12:3456:789a::1".parse().unwrap()));
+        assert!(is_blocked_ipv6("fe80::1".parse().unwrap()));
+        // IPv4-mapped loopback / RFC1918
+        assert!(is_blocked_ipv6("::ffff:127.0.0.1".parse().unwrap()));
+        assert!(is_blocked_ipv6("::ffff:10.0.0.1".parse().unwrap()));
+        assert!(is_blocked_ipv6("::ffff:169.254.169.254".parse().unwrap()));
+        // Public IPv6 stays allowed
+        assert!(!is_blocked_ipv6("2001:4860:4860::8888".parse().unwrap()));
+    }
+
+    #[test]
+    fn assert_host_blocks_literals_and_localhost_name() {
+        let err = assert_host_allowed("127.0.0.1", false)
+            .unwrap_err()
+            .to_string();
+        assert!(err.contains("blocked"), "{err}");
+        let err = assert_host_allowed("10.1.2.3", false)
+            .unwrap_err()
+            .to_string();
+        assert!(err.contains("blocked"), "{err}");
+        let err = assert_host_allowed("169.254.169.254", false)
+            .unwrap_err()
+            .to_string();
+        assert!(err.contains("blocked"), "{err}");
+        let err = assert_host_allowed("localhost", false)
+            .unwrap_err()
+            .to_string();
+        assert!(err.contains("blocked"), "{err}");
+        let err = assert_host_allowed("metadata.google.internal", false)
+            .unwrap_err()
+            .to_string();
+        assert!(err.contains("blocked"), "{err}");
+        // Opt-in clears the gate
+        assert!(assert_host_allowed("127.0.0.1", true).is_ok());
+        assert!(assert_host_allowed("localhost", true).is_ok());
+    }
+
+    #[test]
+    fn assert_fetch_url_blocks_private_and_non_http_schemes() {
+        assert!(assert_fetch_url_allowed("https://127.0.0.1:8888/", false).is_err());
+        assert!(assert_fetch_url_allowed("http://192.168.0.5/login", false).is_err());
+        assert!(assert_fetch_url_allowed("file:///etc/passwd", false).is_err());
+        assert!(assert_fetch_url_allowed("ftp://example.com/", false).is_err());
+        // Public host with https is allowed at the URL-shape layer (DNS checked separately)
+        // Use an IP that is clearly public so we do not depend on live DNS here.
+        assert!(assert_fetch_url_allowed("https://1.1.1.1/", false).is_ok());
+    }
+
+    #[test]
+    fn detect_target_refuses_loopback_without_opt_in() {
+        // Repro of the audit finding: detect against 127.0.0.1 used to fetch.
+        // With the guard it must fail closed before any HTTP.
+        let err = detect_target("http://127.0.0.1:8888/")
+            .unwrap_err()
+            .to_string();
+        assert!(
+            err.to_lowercase().contains("blocked") || err.to_lowercase().contains("refusing"),
+            "expected SSRF refusal, got: {err}"
+        );
+        let err2 = detect_target("localhost").unwrap_err().to_string();
+        assert!(
+            err2.to_lowercase().contains("blocked") || err2.to_lowercase().contains("refusing"),
+            "expected SSRF refusal, got: {err2}"
+        );
+    }
 }
