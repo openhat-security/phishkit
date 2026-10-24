@@ -297,6 +297,11 @@ def configure_via_config_json(
     general["dns_port"] = desired_dns_port()
     # Empty = 403 on unauthorized requests (Evilginx default is a Rick Roll URL).
     general["unauth_url"] = ""
+    # Local dry-runs use a fake TLD (e.g. *.phishkit), so Let's Encrypt cannot
+    # issue for it. Force autocert off here; otherwise evilginx aborts TLS setup
+    # and never binds the HTTPS port, surfacing as a misleading "did not bind"
+    # error. Self-signed certs from the evilginx CA are used instead.
+    general["autocert"] = False
     cfg["general"] = general
 
     # Local dry-run: default "unauth" blacklists 127.0.0.1 after failed probes and
