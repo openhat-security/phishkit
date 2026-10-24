@@ -146,7 +146,7 @@ pub fn target_readiness(profile_id: String) -> AppResult<TargetReadiness> {
         if proxy_running {
             "evilginx appears to be running"
         } else {
-            "No evilginx process detected on port 443"
+            "No evilginx process detected on the HTTPS port"
         },
         "Start lure for this target",
     );

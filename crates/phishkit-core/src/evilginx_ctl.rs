@@ -144,7 +144,7 @@ pub fn start_with_lure(
         ops.regenerate_path = false;
     }
 
-    // Wait briefly for background screen process / port 443
+    // Wait briefly for background screen process / HTTPS listener
     let mut running = false;
     for _ in 0..40 {
         let (up, _) = evilginx_is_running(&root);
@@ -161,9 +161,11 @@ pub fn start_with_lure(
         let _ = stop_evilginx();
         return Err(AppError::msg(format!(
             "evilginx start failed:\n{combined}\n\
-             Tip: privileged ports (:443/:53) need root/setcap, or set \
-             EVILGINX_HTTPS_PORT/EVILGINX_DNS_PORT to high ports; see the evilginx log \
-             (screen -r phishkit-evilginx)."
+             Tip: local dry-runs default to the unprivileged 8443, so the HTTPS \
+             port may just be in use; privileged ports (:443/:53) instead need \
+             root/setcap, or set PHISHKIT_HTTPS_PORT/PHISHKIT_DNS_PORT (or the \
+             EVILGINX_* equivalents) to high ports. Check Advanced → Tail evilginx \
+             log, or screen -r phishkit-evilginx."
         )));
     }
 
@@ -210,7 +212,7 @@ pub fn start_with_lure(
     let message = if !lure.is_empty() && running {
         format!("evilginx running in background · lure: {lure}")
     } else if !lure.is_empty() {
-        format!("Lure configured ({lure}) but process not detected yet — check log / port 443")
+        format!("Lure configured ({lure}) but process not detected yet — check log / HTTPS port")
     } else if running {
         "evilginx running in background (could not parse lure URL — see log)".into()
     } else {

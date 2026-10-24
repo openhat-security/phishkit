@@ -48,11 +48,7 @@ SCREEN_NAME = "phishkit-evilginx"
 
 
 def _env_port(name: str, default: int) -> int:
-    """Read an integer port from the environment, falling back to `default`.
-
-    Lets a lab box run the lure on an unprivileged high port
-    (EVILGINX_HTTPS_PORT / EVILGINX_DNS_PORT) instead of requiring :443/:53.
-    """
+    """Read an integer port from the environment, falling back to `default`."""
     raw = (os.environ.get(name) or "").strip()
     if not raw:
         return default
@@ -65,12 +61,29 @@ def _env_port(name: str, default: int) -> int:
     return port
 
 
+# Local dry-runs default to unprivileged high ports so evilginx never needs
+# root/sudo to bind 443/53. Both PHISHKIT_* and EVILGINX_* overrides are honored
+# (PHISHKIT_* wins to match the Rust engine); set them to 443 / 53 to restore the
+# privileged production ports.
+def _first_env_port(names: tuple[str, ...], default: int) -> int:
+    for name in names:
+        if (os.environ.get(name) or "").strip():
+            return _env_port(name, default)
+    return default
+
+
 def desired_https_port() -> int:
-    return _env_port("EVILGINX_HTTPS_PORT", 443)
+    return _first_env_port(("PHISHKIT_HTTPS_PORT", "EVILGINX_HTTPS_PORT"), 8443)
 
 
 def desired_dns_port() -> int:
-    return _env_port("EVILGINX_DNS_PORT", 53)
+    return _first_env_port(("PHISHKIT_DNS_PORT", "EVILGINX_DNS_PORT"), 5354)
+
+
+def _port_suffix() -> str:
+    """':8443' for a non-standard HTTPS port, '' when bound to 443."""
+    port = desired_https_port()
+    return "" if port == 443 else f":{port}"
 
 class ConfigureError(RuntimeError):
     pass
@@ -200,7 +213,7 @@ def lure_from_config(dryrun_domain: str, phishlet: str) -> str | None:
     else:
         sub = _landing_sub(phishlet)
         host = f"{sub}.{domain}" if sub else domain
-    return f"https://{host}{path}"
+    return f"https://{host}{_port_suffix()}{path}"
 
 
 def _normalize_lure_ops(ops: dict | None) -> dict:
@@ -277,8 +290,9 @@ def configure_via_config_json(
     general = cfg.get("general") or {}
     general["domain"] = dryrun_domain
     general["external_ipv4"] = "127.0.0.1"
-    # Honor high-port overrides so a lab run can avoid root (evilginx defaults
-    # https_port=443 / dns_port=53 when these are unset).
+    # Bind evilginx on the configured ports. Local dry-runs default to
+    # unprivileged high ports so a run never needs root to grab 443/53; set
+    # PHISHKIT_/EVILGINX_HTTPS_PORT (and the DNS equivalents) to override.
     general["https_port"] = desired_https_port()
     general["dns_port"] = desired_dns_port()
     # Empty = 403 on unauthorized requests (Evilginx default is a Rick Roll URL).
@@ -379,7 +393,7 @@ def configure_via_config_json(
     first_path = (cfg["lures"][0].get("path") or "").strip()
     if not first_path.startswith("/"):
         first_path = f"/{first_path}" if first_path else _pick_lure_path(phishlet)
-    return lure_from_config(dryrun_domain, phishlet) or f"https://{landing_host}{first_path}"
+    return lure_from_config(dryrun_domain, phishlet) or f"https://{landing_host}{_port_suffix()}{first_path}"
 
 def _socket_listening(port: int, host: str = "127.0.0.1") -> bool:
     """True if something accepts TCP connections on host:port.

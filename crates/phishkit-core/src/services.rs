@@ -94,7 +94,20 @@ pub fn evilginx_is_running(root: &std::path::Path) -> (bool, Option<u32>) {
     if screen_session_up("phishkit-evilginx") {
         return (true, None);
     }
-    let port_pid = port_pids(443).into_iter().chain(port_pids(8443)).next();
+    // Default dry-runs bind the unprivileged 8443; production/privileged use 443.
+    // An operator override via PHISHKIT_HTTPS_PORT is checked first.
+    let mut candidates: Vec<u16> = Vec::new();
+    if let Ok(raw) = std::env::var("PHISHKIT_HTTPS_PORT") {
+        if let Ok(p) = raw.trim().parse::<u16>() {
+            candidates.push(p);
+        }
+    }
+    for p in [8443u16, 443u16] {
+        if !candidates.contains(&p) {
+            candidates.push(p);
+        }
+    }
+    let port_pid = candidates.into_iter().flat_map(port_pids).next();
     if let Some(pid) = port_pid {
         return (true, Some(pid));
     }

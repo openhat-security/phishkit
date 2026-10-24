@@ -33,23 +33,43 @@ cl = _load_module()
 
 
 class PortSelection(unittest.TestCase):
+    PORT_ENV = (
+        "PHISHKIT_HTTPS_PORT",
+        "PHISHKIT_DNS_PORT",
+        "EVILGINX_HTTPS_PORT",
+        "EVILGINX_DNS_PORT",
+    )
+
     def setUp(self):
-        for k in ("EVILGINX_HTTPS_PORT", "EVILGINX_DNS_PORT"):
+        for k in self.PORT_ENV:
             os.environ.pop(k, None)
 
     def tearDown(self):
-        for k in ("EVILGINX_HTTPS_PORT", "EVILGINX_DNS_PORT"):
+        for k in self.PORT_ENV:
             os.environ.pop(k, None)
 
-    def test_defaults_are_privileged_ports(self):
-        self.assertEqual(cl.desired_https_port(), 443)
-        self.assertEqual(cl.desired_dns_port(), 53)
+    def test_defaults_are_unprivileged_ports(self):
+        # Local dry-runs default to high ports so evilginx never needs root/sudo
+        # to bind; set the env overrides to 443/53 for privileged production use.
+        self.assertEqual(cl.desired_https_port(), 8443)
+        self.assertEqual(cl.desired_dns_port(), 5354)
 
     def test_env_override_high_ports(self):
         os.environ["EVILGINX_HTTPS_PORT"] = "8443"
         os.environ["EVILGINX_DNS_PORT"] = "5353"
         self.assertEqual(cl.desired_https_port(), 8443)
         self.assertEqual(cl.desired_dns_port(), 5353)
+
+    def test_phishkit_env_takes_precedence(self):
+        os.environ["PHISHKIT_HTTPS_PORT"] = "9443"
+        os.environ["EVILGINX_HTTPS_PORT"] = "8443"
+        self.assertEqual(cl.desired_https_port(), 9443)
+
+    def test_env_override_privileged_ports(self):
+        os.environ["PHISHKIT_HTTPS_PORT"] = "443"
+        os.environ["PHISHKIT_DNS_PORT"] = "53"
+        self.assertEqual(cl.desired_https_port(), 443)
+        self.assertEqual(cl.desired_dns_port(), 53)
 
     def test_invalid_port_raises(self):
         os.environ["EVILGINX_HTTPS_PORT"] = "notaport"
@@ -187,11 +207,20 @@ class ConfigWritesPorts(unittest.TestCase):
         cl.EVILGINX_LOG = data / "evilginx.log"
         # Pre-seed a config with a stale enabled phishlet to prove it gets disabled.
         cl.CONFIG_JSON.write_text(json.dumps({"phishlets": {"stale": {"enabled": True}}}))
+        for k in self._PORT_ENV:
+            os.environ.pop(k, None)
+
+    _PORT_ENV = (
+        "PHISHKIT_HTTPS_PORT",
+        "PHISHKIT_DNS_PORT",
+        "EVILGINX_HTTPS_PORT",
+        "EVILGINX_DNS_PORT",
+    )
 
     def tearDown(self):
         for k, v in self.saved.items():
             setattr(cl, k, v)
-        for k in ("EVILGINX_HTTPS_PORT", "EVILGINX_DNS_PORT"):
+        for k in self._PORT_ENV:
             os.environ.pop(k, None)
         self.tmp.cleanup()
 
@@ -208,11 +237,11 @@ class ConfigWritesPorts(unittest.TestCase):
         self.assertFalse(cfg["phishlets"]["stale"]["enabled"])
         self.assertEqual(cfg["lures"][0]["phishlet"], "demo-cookie")
 
-    def test_defaults_to_privileged_ports(self):
+    def test_defaults_to_unprivileged_ports(self):
         cl.configure_via_config_json("demo-cookie", "demo-cookie.local.phishkit")
         cfg = json.loads(cl.CONFIG_JSON.read_text())
-        self.assertEqual(cfg["general"]["https_port"], 443)
-        self.assertEqual(cfg["general"]["dns_port"], 53)
+        self.assertEqual(cfg["general"]["https_port"], 8443)
+        self.assertEqual(cfg["general"]["dns_port"], 5354)
 
 
 if __name__ == "__main__":
