@@ -116,7 +116,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          BUNDLE="apps/desktop/src-tauri/target/${{ matrix.target }}/release/bundle"
+          # Cargo uses the workspace-root target dir, not src-tauri/target.
+          BUNDLE="target/${{ matrix.target }}/release/bundle"
           mkdir -p dist-desktop
           # .dmg (installer) plus the updater bundle + its .sig, if present.
           find "$BUNDLE" -type f \( -name '*.dmg' -o -name '*.app.tar.gz' -o -name '*.app.tar.gz.sig' \) \
