@@ -144,7 +144,7 @@ pub fn start_with_lure(
         ops.regenerate_path = false;
     }
 
-    // Wait briefly for background screen process / port 443
+    // Wait briefly for background screen process / HTTPS listener
     let mut running = false;
     for _ in 0..40 {
         let (up, _) = evilginx_is_running(&root);
@@ -158,7 +158,8 @@ pub fn start_with_lure(
     if !out.status.success() && lure.is_empty() {
         return Err(AppError::msg(format!(
             "evilginx start failed:\n{combined}\n\
-             Tip: port 443 may need privileges; check Advanced → Tail evilginx log."
+             Tip: the HTTPS port may be in use or need privileges (local dry-runs \
+             default to unprivileged 8443); check Advanced → Tail evilginx log."
         )));
     }
 
@@ -205,7 +206,7 @@ pub fn start_with_lure(
     let message = if !lure.is_empty() && running {
         format!("evilginx running in background · lure: {lure}")
     } else if !lure.is_empty() {
-        format!("Lure configured ({lure}) but process not detected yet — check log / port 443")
+        format!("Lure configured ({lure}) but process not detected yet — check log / HTTPS port")
     } else if running {
         "evilginx running in background (could not parse lure URL — see log)".into()
     } else {

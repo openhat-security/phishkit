@@ -13,6 +13,12 @@ Operator state defaults to **OS application directories** (not the git checkout)
 Override with `PHISHKIT_CONFIG`, `PHISHKIT_DATA`, and (for scripts) `EVILGINX_DATA_DIR`.
 Inspect resolved paths with `phishkit paths` or Settings in the desktop app.
 
+The local dry-run proxy binds **unprivileged ports by default** so it never
+needs `sudo`: HTTPS on `8443` and DNS on `5354`. The lure URL carries the
+port when it isn't 443 (for example `https://portal.acme.phishkit:8443/login`).
+Set `PHISHKIT_HTTPS_PORT=443` (and `PHISHKIT_DNS_PORT=53`) to use the
+privileged ports, which then require elevated privileges to bind.
+
 ## Local data
 
 | Data | Location | Notes |
@@ -50,5 +56,8 @@ and only leave the machine if you export them.
 | `/etc/hosts` add | macOS (admin prompt) | Point the local dry-run domain at the proxy |
 | `/etc/hosts` remove | macOS (admin prompt) | Paired cleanup at end of engagement |
 
-These modify the operator's own machine only. See
+These modify the operator's own machine only. The dry-run proxy itself runs
+without elevation because it binds unprivileged ports (`8443`/`5354`) by
+default; only the opt-in `PHISHKIT_HTTPS_PORT=443`/`PHISHKIT_DNS_PORT=53`
+override needs privileges to bind. See
 [platform support](/reference/platform-support) for the current matrix.

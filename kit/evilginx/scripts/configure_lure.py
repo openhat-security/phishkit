@@ -45,6 +45,32 @@ _LOG_ENV = (os.environ.get("EVILGINX_LOG") or "").strip()
 EVILGINX_LOG = Path(_LOG_ENV).resolve() if _LOG_ENV else (DATA_DIR / "evilginx.log")
 SCREEN_NAME = "phishkit-evilginx"
 
+
+def _env_port(var: str, default: int) -> int:
+    raw = (os.environ.get(var) or "").strip()
+    if raw:
+        try:
+            port = int(raw)
+        except ValueError:
+            _log(f"ignoring invalid {var}={raw!r}; using {default}")
+        else:
+            if 1 <= port <= 65535:
+                return port
+            _log(f"ignoring out-of-range {var}={raw!r}; using {default}")
+    return default
+
+
+# Local dry-run defaults to unprivileged ports so evilginx never needs root/sudo
+# to bind. Set PHISHKIT_HTTPS_PORT=443 (and PHISHKIT_DNS_PORT=53) to restore the
+# privileged production ports.
+HTTPS_PORT = _env_port("PHISHKIT_HTTPS_PORT", 8443)
+DNS_PORT = _env_port("PHISHKIT_DNS_PORT", 5354)
+
+
+def _port_suffix() -> str:
+    """':8443' for a non-standard HTTPS port, '' when bound to 443."""
+    return "" if HTTPS_PORT == 443 else f":{HTTPS_PORT}"
+
 class ConfigureError(RuntimeError):
     pass
 
@@ -173,7 +199,7 @@ def lure_from_config(dryrun_domain: str, phishlet: str) -> str | None:
     else:
         sub = _landing_sub(phishlet)
         host = f"{sub}.{domain}" if sub else domain
-    return f"https://{host}{path}"
+    return f"https://{host}{_port_suffix()}{path}"
 
 
 def _normalize_lure_ops(ops: dict | None) -> dict:
@@ -250,6 +276,10 @@ def configure_via_config_json(
     general = cfg.get("general") or {}
     general["domain"] = dryrun_domain
     general["external_ipv4"] = "127.0.0.1"
+    # Bind evilginx on the configured (default unprivileged) ports so a local
+    # dry-run never needs root to grab 443/53.
+    general["https_port"] = HTTPS_PORT
+    general["dns_port"] = DNS_PORT
     # Empty = 403 on unauthorized requests (Evilginx default is a Rick Roll URL).
     general["unauth_url"] = ""
     cfg["general"] = general
@@ -348,11 +378,11 @@ def configure_via_config_json(
     first_path = (cfg["lures"][0].get("path") or "").strip()
     if not first_path.startswith("/"):
         first_path = f"/{first_path}" if first_path else _pick_lure_path(phishlet)
-    return lure_from_config(dryrun_domain, phishlet) or f"https://{landing_host}{first_path}"
+    return lure_from_config(dryrun_domain, phishlet) or f"https://{landing_host}{_port_suffix()}{first_path}"
 
 def _https_port_listening() -> bool:
     probe = subprocess.run(
-        ["lsof", "-nP", "-iTCP:443", "-sTCP:LISTEN", "-t"],
+        ["lsof", "-nP", f"-iTCP:{HTTPS_PORT}", "-sTCP:LISTEN", "-t"],
         capture_output=True,
         text=True,
         check=False,
@@ -367,7 +397,7 @@ def _wait_https_port(timeout_sec: float = 12.0) -> None:
             return
         time.sleep(0.25)
     raise ConfigureError(
-        "evilginx did not bind HTTPS port 443 in time — "
+        f"evilginx did not bind HTTPS port {HTTPS_PORT} in time — "
         "check evilginx.log (port in use or need elevated privileges)."
     )
 
@@ -392,7 +422,7 @@ def start_in_screen() -> None:
         )
         if probe.returncode == 0:
             _wait_https_port()
-            _log("evilginx is running in screen (port 443 listening)")
+            _log(f"evilginx is running in screen (port {HTTPS_PORT} listening)")
             return
         time.sleep(0.25)
     raise ConfigureError("evilginx did not start in screen after configure")
