@@ -95,6 +95,11 @@ jobs:
         run: npm --prefix apps/desktop ci || npm --prefix apps/desktop install
       # The desktop app launches the vendored evilginx at runtime, so build it
       # first with the repo's own target rather than reinventing the command.
+      # macOS runners ship without Go, so install the toolchain the vendored
+      # evilginx2 module needs before building it.
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
       - name: Build vendored evilginx
         run: make build-evilginx
       - name: Build desktop app (.dmg)
