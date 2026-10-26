@@ -418,17 +418,63 @@ pub struct CaTrustInfo {
     pub steps: Vec<String>,
 }
 
-fn ca_already_installed() -> bool {
+/// SHA-1 fingerprint (uppercase hex, no separators) of a PEM cert, via `openssl`.
+fn ca_cert_fingerprint(path: &std::path::Path) -> Option<String> {
+    let out = std::process::Command::new("openssl")
+        .args(["x509", "-in"])
+        .arg(path)
+        .args(["-noout", "-fingerprint", "-sha1"])
+        .output()
+        .ok()?;
+    if !out.status.success() {
+        return None;
+    }
+    // "SHA1 Fingerprint=7D:83:AB:..." -> "7D83AB..."
+    let text = String::from_utf8_lossy(&out.stdout);
+    let hex: String = text
+        .split('=')
+        .nth(1)?
+        .chars()
+        .filter(|c| c.is_ascii_hexdigit())
+        .collect();
+    if hex.is_empty() {
+        None
+    } else {
+        Some(hex.to_ascii_uppercase())
+    }
+}
+
+/// True only when the *current* CA file's fingerprint is trusted in a keychain.
+/// Matching by common name alone is wrong: a stale "Evilginx Super-Evil Root CA"
+/// from an earlier run stays in the keychain with a different key, so the browser
+/// keeps trusting the old cert while the freshly minted CA is rejected (the
+/// "Keychain has 7D:83… but active CA is 36:E0…" TLS failure). Compare the exact
+/// SHA-1 fingerprint of the live ca.crt against the keychain entries instead.
+fn ca_already_installed(ca_path: &std::path::Path) -> bool {
+    let want = match ca_cert_fingerprint(ca_path) {
+        Some(f) => f,
+        None => return false,
+    };
     let out = std::process::Command::new("security")
         .args([
             "find-certificate",
+            "-a",
+            "-Z",
             "-c",
             "Evilginx Super-Evil Root CA",
-            "-a",
         ])
         .output();
     match out {
-        Ok(o) => String::from_utf8_lossy(&o.stdout).contains("Evilginx Super-Evil Root CA"),
+        Ok(o) => String::from_utf8_lossy(&o.stdout).lines().any(|line| {
+            line.trim()
+                .strip_prefix("SHA-1 hash:")
+                .map(|rest| {
+                    let got: String =
+                        rest.chars().filter(|c| c.is_ascii_hexdigit()).collect();
+                    got.to_ascii_uppercase() == want
+                })
+                .unwrap_or(false)
+        }),
         Err(_) => false,
     }
 }
@@ -462,10 +508,12 @@ pub fn list_redirectors() -> AppResult<Vec<RedirectorInfo>> {
 }
 
 pub fn ca_trust_info() -> AppResult<CaTrustInfo> {
-    let root = kit_root()?;
-    let ca = root.join("kit/evilginx/run/data/crt/ca.crt");
+    // The live CA is minted into the OS data dir (macOS: ~/Library/Application
+    // Support/.../evilginx), NOT the dev checkout's kit/evilginx/run/data — that
+    // path does not exist in the installed app, so the old lookup always missed.
+    let ca = crate::setup::evilginx_data_dir()?.join("crt/ca.crt");
     let path = ca.display().to_string();
-    let installed = ca_already_installed();
+    let installed = ca_already_installed(&ca);
     // Prefer login keychain — double-click / System re-import often fails with -25294
     // when the cert already exists (errSecInvalidOwnerEdit).
     let cmd = if installed {

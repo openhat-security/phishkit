@@ -14,6 +14,15 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   (the "proxy stays idle / did not bind 8443" local-lure failure).
 - The HTTPS bind poll also probes the IPv6 loopback (`::1`), so a Darwin
   IPv6-only bind no longer reports a false negative.
+- CA trust info now points at the live CA in the OS data dir
+  (`~/Library/Application Support/.../evilginx/crt/ca.crt`) instead of the dev
+  checkout's `kit/evilginx/run/data` path, which does not exist in the installed
+  app. `already_installed` now matches the current CA's SHA-1 fingerprint rather
+  than its common name, so a stale same-named CA in the keychain no longer hides
+  an untrusted freshly minted CA.
+- `GetLoginUrl` redirects stay on the phishing landing host (e.g.
+  `portal.freetech.phishkit:8443/login`) instead of the real origin
+  (`portal.freetech.co:8443`), which hit the real CDN and failed TLS.
 
 ## [0.1.1-alpha.1] - 2026-10-19
 
