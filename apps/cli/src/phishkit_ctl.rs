@@ -8,6 +8,15 @@ use serde_json::json;
 
 fn main() {
     let mut args = env::args().skip(1).collect::<Vec<_>>();
+    if args.iter().any(|a| a == "-V" || a == "--version")
+        || args.first().map(|a| a == "version").unwrap_or(false)
+    {
+        println!(
+            "phishkit {}",
+            option_env!("PHISHKIT_VERSION").unwrap_or(env!("CARGO_PKG_VERSION"))
+        );
+        process::exit(0);
+    }
     let wants_help = args.is_empty()
         || args.iter().any(|a| a == "-h" || a == "--help")
         || args.first().map(|a| a == "help").unwrap_or(false);

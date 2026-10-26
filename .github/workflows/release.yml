@@ -40,7 +40,13 @@ jobs:
           targets: ${{ matrix.target }}
       - uses: Swatinem/rust-cache@v2
       - name: Build CLI
-        run: cargo build --release -p phishkit-cli --target ${{ matrix.target }}
+        # Bake the release version (tag without the leading `v`) into the CLI so
+        # `phishkit --version` reports the shipped build, not the Cargo default.
+        env:
+          PHISHKIT_VERSION: ${{ github.ref_name }}
+        run: |
+          export PHISHKIT_VERSION="${PHISHKIT_VERSION#v}"
+          cargo build --release -p phishkit-cli --target ${{ matrix.target }}
       - name: Package
         shell: bash
         run: |
