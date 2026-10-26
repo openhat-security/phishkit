@@ -48,6 +48,11 @@ fn candidate_roots() -> Vec<PathBuf> {
             out.push(dir.join("../Resources"));
             out.push(dir.join("../Resources/kit-root"));
             out.push(dir.join("../share/phishkit"));
+            // CLI tarball ships a `kit-root/` next to the binary (and the cask
+            // symlinks the binary out of the staged Caskroom dir, which
+            // current_exe resolves back to), so look beside and one up.
+            out.push(dir.join("kit-root"));
+            out.push(dir.join("../kit-root"));
             push_ancestors(&mut out, dir, 8);
         }
     }

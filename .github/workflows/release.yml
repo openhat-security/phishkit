@@ -39,6 +39,9 @@ jobs:
         with:
           targets: ${{ matrix.target }}
       - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
       - name: Build CLI
         # Bake the release version (tag without the leading `v`) into the CLI so
         # `phishkit --version` reports the shipped build, not the Cargo default.
@@ -47,6 +50,22 @@ jobs:
         run: |
           export PHISHKIT_VERSION="${PHISHKIT_VERSION#v}"
           cargo build --release -p phishkit-cli --target ${{ matrix.target }}
+      - name: Build vendored evilginx
+        # Ship a runnable kit so a brew-installed CLI finds its kit root without
+        # a manual PHISHKIT_ROOT. GOARCH is derived from the Rust target triple
+        # so the evilginx binary matches the archive's architecture.
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${{ matrix.target }}" in
+            x86_64-*) export GOARCH=amd64 ;;
+            aarch64-*) export GOARCH=arm64 ;;
+          esac
+          case "${{ matrix.target }}" in
+            *-apple-darwin) export GOOS=darwin ;;
+            *-unknown-linux-gnu) export GOOS=linux ;;
+          esac
+          make build-evilginx
       - name: Package
         shell: bash
         run: |
@@ -57,6 +76,9 @@ jobs:
           cp "target/${{ matrix.target }}/release/phishkit" dist/"$OUT"/
           cp "target/${{ matrix.target }}/release/phishkit_ctl" dist/"$OUT"/ 2>/dev/null || true
           cp README.md LICENSE docs/guide/authorized-use.md dist/"$OUT"/ 2>/dev/null || true
+          # Bundle the kit tree beside the binaries; kit_root() finds a `kit-root/`
+          # sibling of the executable (the cask symlinks resolve back into here).
+          ./scripts/stage_kit_root.sh "dist/${OUT}/kit-root"
           tar -C dist -czf "dist/${OUT}.tar.gz" "$OUT"
           (cd dist && shasum -a 256 "${OUT}.tar.gz" > "${OUT}.tar.gz.sha256")
       - uses: actions/upload-artifact@v4
@@ -108,6 +130,10 @@ jobs:
           go-version: "1.22"
       - name: Build vendored evilginx
         run: make build-evilginx
+      - name: Stage kit-root for the app bundle
+        # Tauri `bundle.resources` (kit-root/**/*) copies this into
+        # Contents/Resources/kit-root/, which kit_root() resolves at runtime.
+        run: ./scripts/stage_kit_root.sh apps/desktop/src-tauri/kit-root
       - name: Build desktop app (.dmg)
         # Tauri reads the minisign updater key from the environment because the
         # app ships `createUpdaterArtifacts: true`. Notarization is intentionally
