@@ -2919,7 +2919,7 @@ dependencies = [
 
 [[package]]
 name = "phishkit"
-version = "0.1.1-alpha.1"
+version = "0.1.1-alpha.6"
 dependencies = [
  "phishkit-core",
  "serde",
@@ -2942,7 +2942,7 @@ dependencies = [
 
 [[package]]
 name = "phishkit-core"
-version = "0.1.1-alpha.1"
+version = "0.1.1-alpha.6"
 dependencies = [
  "base64 0.22.1",
  "chacha20poly1305",
