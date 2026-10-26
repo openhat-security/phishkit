@@ -41,7 +41,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: "1.24"
       - name: Build CLI
         # Bake the release version (tag without the leading `v`) into the CLI so
         # `phishkit --version` reports the shipped build, not the Cargo default.
@@ -81,6 +81,19 @@ jobs:
           ./scripts/stage_kit_root.sh "dist/${OUT}/kit-root"
           tar -C dist -czf "dist/${OUT}.tar.gz" "$OUT"
           (cd dist && shasum -a 256 "${OUT}.tar.gz" > "${OUT}.tar.gz.sha256")
+      - name: Verify staged Darwin evilginx has LC_UUID
+        if: endsWith(matrix.target, '-apple-darwin')
+        shell: bash
+        run: |
+          set -euo pipefail
+          VER="${GITHUB_REF_NAME#v}"
+          BIN="dist/phishkit-${VER}-${{ matrix.target }}/kit-root/kit/evilginx/run/evilginx"
+          test -f "$BIN" || { echo "staged evilginx missing: $BIN" >&2; exit 1; }
+          if ! otool -l "$BIN" | grep -q LC_UUID; then
+            echo "FATAL: staged Darwin evilginx has no LC_UUID — dyld would refuse to run it ($BIN)" >&2
+            exit 1
+          fi
+          echo "ok: LC_UUID present in $BIN"
       - uses: actions/upload-artifact@v4
         with:
           name: cli-${{ matrix.target }}
@@ -127,13 +140,24 @@ jobs:
       # evilginx2 module needs before building it.
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: "1.24"
       - name: Build vendored evilginx
         run: make build-evilginx
       - name: Stage kit-root for the app bundle
         # Tauri `bundle.resources` (kit-root/**/*) copies this into
         # Contents/Resources/kit-root/, which kit_root() resolves at runtime.
         run: ./scripts/stage_kit_root.sh apps/desktop/src-tauri/kit-root
+      - name: Verify staged Darwin evilginx has LC_UUID
+        shell: bash
+        run: |
+          set -euo pipefail
+          BIN="apps/desktop/src-tauri/kit-root/kit/evilginx/run/evilginx"
+          test -f "$BIN" || { echo "staged evilginx missing: $BIN" >&2; exit 1; }
+          if ! otool -l "$BIN" | grep -q LC_UUID; then
+            echo "FATAL: staged Darwin evilginx has no LC_UUID — dyld would refuse to run it ($BIN)" >&2
+            exit 1
+          fi
+          echo "ok: LC_UUID present in $BIN"
       - name: Build desktop app (.dmg)
         # Tauri reads the minisign updater key from the environment because the
         # app ships `createUpdaterArtifacts: true`. Notarization is intentionally
