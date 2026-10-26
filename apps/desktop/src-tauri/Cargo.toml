@@ -1,6 +1,6 @@
 [package]
 name = "phishkit"
-version = "0.1.1-alpha.7"
+version = "0.1.1-alpha.8"
 description = "phishkit desktop — Tauri shell over phishkit-core"
 authors = ["phishkit"]
 edition = "2021"
