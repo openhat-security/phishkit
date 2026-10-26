@@ -248,10 +248,13 @@ export default function DemoTour({
   );
 }
 
-export function shouldAutoOfferDemoTour(assessmentCount) {
+export function shouldAutoOfferDemoTour() {
+  // First-open popup: auto-offer once while the tour has never been
+  // completed or skipped. After the user finishes or dismisses it, the
+  // persisted localStorage state stops it from auto-showing again.
   const s = loadDemoTourState();
   if (s.status === DEMO_TOUR_STATUS.completed || s.status === DEMO_TOUR_STATUS.skipped) {
     return false;
   }
-  return assessmentCount === 0;
+  return true;
 }

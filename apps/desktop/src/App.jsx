@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { getVersion } from "@tauri-apps/api/app";
 import AssessmentsHome from "./AssessmentsHome";
 import SetupWizard from "./SetupWizard";
 import SettingsView from "./SettingsView";
@@ -89,6 +90,7 @@ export default function App() {
   const [setup, setSetup] = useState(null);
   const [persona, setPersona] = useState("cybersecStudent");
   const demoTourOfferedRef = useRef(false);
+  const [appVersion, setAppVersion] = useState("");
 
   const append = useCallback((msg) => {
     setLog((p) =>
@@ -110,6 +112,12 @@ export default function App() {
       }
     })();
   }, [append]);
+
+  useEffect(() => {
+    getVersion()
+      .then((v) => setAppVersion(v))
+      .catch(() => {});
+  }, []);
 
 
   const activityRef = useRef(null);
@@ -260,7 +268,7 @@ export default function App() {
       return;
     }
     demoTourOfferedRef.current = true;
-    if (shouldAutoOfferDemoTour(assessments.length)) {
+    if (shouldAutoOfferDemoTour()) {
       startDemoTour();
     }
   }, [sessionReady, setup, assessments.length, startDemoTour]);
@@ -885,18 +893,10 @@ return (
         {renderSidebar()}
         <div className="spacer" />
         <div className="sidebar-foot">
-          <button
-            type="button"
-            className="ghost"
-            data-testid="start-demo-tour"
-            disabled={demoTourOpen}
-            onClick={startDemoTour}
-          >
-            Demo tour
-          </button>
-          <div>Alpha — not production</div>
-          <div>Authorized assessments only</div>
-          <div className="mono">{kit?.root || "locating kit…"}</div>
+          <div className="app-version" data-testid="app-version">
+            <b>phish</b>kit <span className="mono">v{appVersion || "…"}</span>
+          </div>
+          <div className="foot-note">Alpha · authorized use only</div>
         </div>
       </aside>
 
