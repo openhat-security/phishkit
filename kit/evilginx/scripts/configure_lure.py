@@ -15,6 +15,7 @@ import re
 import secrets
 import socket
 import string
+import shlex
 import subprocess
 import sys
 import time
@@ -432,7 +433,13 @@ def _tool_reports_listen(port: int) -> bool:
 
 def https_port_listening(port: int | None = None) -> bool:
     port = port if port is not None else desired_https_port()
-    return _socket_listening(port) or _tool_reports_listen(port)
+    # Darwin can bind evilginx IPv6-only, so a 127.0.0.1-only probe reports a
+    # false negative even though the port is up. Try both loopback families.
+    return (
+        _socket_listening(port, "127.0.0.1")
+        or _socket_listening(port, "::1")
+        or _tool_reports_listen(port)
+    )
 
 
 def _wait_https_port(port: int | None = None, timeout_sec: float = 15.0) -> bool:
@@ -459,15 +466,29 @@ def _evilginx_process_up() -> bool:
     return probe.returncode == 0
 
 
+def _build_screen_cmd() -> str:
+    """bash -lc command string launched inside the screen session.
+
+    Every path is shlex-quoted because OS data dirs contain spaces (macOS
+    "Application Support"). Without quoting, bash word-splits the -c / `tee -a`
+    arguments, evilginx never binds the HTTPS port, and the proxy stays idle —
+    the exact local-lure failure this guards against.
+    """
+    env_export = f"export PHISHKIT_ROOT={shlex.quote(str(KIT_ROOT))}; "
+    return (
+        f"{env_export}exec {shlex.quote(str(EVILGINX_BIN))} "
+        f"-p {shlex.quote(str(PHISHLETS_DIR))} "
+        f"-t {shlex.quote(str(REDIRECTORS_DIR))} "
+        f"-c {shlex.quote(str(DATA_DIR))} "
+        f"-developer -debug 2>&1 | tee -a {shlex.quote(str(EVILGINX_LOG))}"
+    )
+
+
 def start_in_screen() -> None:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     EVILGINX_LOG.parent.mkdir(parents=True, exist_ok=True)
     port = desired_https_port()
-    env_export = f"export PHISHKIT_ROOT={KIT_ROOT}; "
-    cmd = (
-        f"{env_export}exec {EVILGINX_BIN} -p {PHISHLETS_DIR} -t {REDIRECTORS_DIR} -c {DATA_DIR}"
-        f" -developer -debug 2>&1 | tee -a {EVILGINX_LOG}"
-    )
+    cmd = _build_screen_cmd()
     args = ["screen", "-dmS", SCREEN_NAME, "bash", "-lc", cmd]
     _log(f"starting background screen session '{SCREEN_NAME}'")
     subprocess.run(args, check=False, cwd=str(KIT_ROOT))

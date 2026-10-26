@@ -244,5 +244,51 @@ class ConfigWritesPorts(unittest.TestCase):
         self.assertEqual(cfg["general"]["dns_port"], 5354)
 
 
+class ScreenCmdQuoting(unittest.TestCase):
+    """Regression for the local-lure idle-proxy bug: the screen launch command
+    must shlex-quote every path so a macOS data dir with spaces ("Application
+    Support") does not word-split and leave evilginx unable to bind HTTPS."""
+
+    def setUp(self):
+        self._saved = {
+            "KIT_ROOT": cl.KIT_ROOT,
+            "EVILGINX_BIN": cl.EVILGINX_BIN,
+            "PHISHLETS_DIR": cl.PHISHLETS_DIR,
+            "REDIRECTORS_DIR": cl.REDIRECTORS_DIR,
+            "DATA_DIR": cl.DATA_DIR,
+            "EVILGINX_LOG": cl.EVILGINX_LOG,
+        }
+        base = Path(
+            "/Users/someone/Library/Application Support/com.phishkit.phishkit/evilginx"
+        )
+        cl.KIT_ROOT = Path("/opt/phishkit/kit root")
+        cl.EVILGINX_BIN = base / "run" / "evilginx"
+        cl.PHISHLETS_DIR = base / "phishlets"
+        cl.REDIRECTORS_DIR = base / "redirectors"
+        cl.DATA_DIR = base
+        cl.EVILGINX_LOG = base / "evilginx.log"
+
+    def tearDown(self):
+        for k, v in self._saved.items():
+            setattr(cl, k, v)
+
+    def test_cmd_quotes_application_support_paths(self):
+        cmd = cl._build_screen_cmd()
+        # The space-containing data dir must appear single-quoted, never bare.
+        self.assertIn(
+            "'/Users/someone/Library/Application Support/com.phishkit.phishkit/evilginx'",
+            cmd,
+        )
+        self.assertNotIn(" Application Support/", cmd)
+        # Every path arg is shlex-quoted: the command must round-trip through the
+        # shell lexer back to the exact tokens we built (no accidental splitting).
+        import shlex
+        tokens = shlex.split(cmd)
+        self.assertIn(str(cl.DATA_DIR), tokens)
+        self.assertIn(str(cl.EVILGINX_BIN), tokens)
+        self.assertIn(str(cl.PHISHLETS_DIR), tokens)
+        self.assertIn(str(cl.EVILGINX_LOG), tokens)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -6,6 +6,15 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- The background lure launcher now shlex-quotes every path in the `screen`
+  command, so a macOS data dir with spaces (`~/Library/Application Support/`)
+  no longer word-splits and leaves evilginx unable to bind the HTTPS port
+  (the "proxy stays idle / did not bind 8443" local-lure failure).
+- The HTTPS bind poll also probes the IPv6 loopback (`::1`), so a Darwin
+  IPv6-only bind no longer reports a false negative.
+
 ## [0.1.1-alpha.1] - 2026-10-19
 
 ### Fixed
